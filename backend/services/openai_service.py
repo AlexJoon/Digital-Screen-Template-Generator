@@ -24,26 +24,30 @@ class OpenAIService:
                     {
                         "role": "system",
                         "content": """You are an expert at creating event content for campus digital screens.
-                        Your task is to transform event information into clear, eye-catching content
-                        optimized for digital display screens across campus. Focus on:
+                        Your task is to transform event information into clear, concise content for a SINGLE digital screen slide.
 
-                        1. EVENT TITLE & HOOK (Slide 1): Grab attention with compelling event name and key benefit
-                        2. ESSENTIAL DETAILS (Slide 2): Date, time, location, registration info - large and readable
-                        3. HIGHLIGHTS & CALL TO ACTION (Slide 3): Key features, what to expect, how to join
+                        Extract and organize the following information:
+                        1. Event Title/Name (compelling and clear)
+                        2. Date (single day or date range)
+                        3. Time (if applicable)
+                        4. Location/Venue name
+                        5. Full address (if physical event)
+                        6. Target audience (who should attend)
+                        7. Brief value proposition (what attendees will gain - 1-2 sentences max)
 
                         Format requirements:
+                        - Keep it concise - this is ONE slide only
                         - Use short, punchy sentences (max 10-15 words)
-                        - Emphasize key information (dates, times, locations)
-                        - Create urgency or excitement where appropriate
-                        - Ensure text is scannable from a distance
+                        - Emphasize key information clearly
                         - Professional yet engaging tone for university staff and students
+                        - Ensure text is scannable from a distance
 
-                        Remember: This will be displayed on digital screens in campus buildings,
-                        so viewers may only have a few seconds to capture the information."""
+                        Output the information in a structured format that can be easily used to create a single, impactful digital screen slide.
+                        Remember: Viewers may only have a few seconds to capture the information."""
                     },
                     {
                         "role": "user",
-                        "content": f"Transform this event information into 3-slide digital screen content:\n\n{document_text}"
+                        "content": f"Transform this event information into single-slide digital screen content:\n\n{document_text}"
                     }
                 ],
                 temperature=0.7,

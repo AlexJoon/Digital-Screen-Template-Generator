@@ -3,9 +3,10 @@ function StatusDisplay({ status, message, progress }) {
     if (status === 'uploading' || status === 'processing') {
       return (
         <svg
-          className="animate-spin h-12 w-12 text-primary-600"
+          className="animate-spin h-12 w-12"
           fill="none"
           viewBox="0 0 24 24"
+          style={{ color: '#009bdb' }}
         >
           <circle
             className="opacity-25"
@@ -78,7 +79,7 @@ function StatusDisplay({ status, message, progress }) {
 
       {/* Status Message */}
       <div className="text-center">
-        <p className={`text-lg font-medium ${getStatusColor()}`}>
+        <p className={`text-base font-medium ${getStatusColor()}`}>
           {message}
         </p>
       </div>
@@ -86,10 +87,10 @@ function StatusDisplay({ status, message, progress }) {
       {/* Progress Bar */}
       {(status === 'uploading' || status === 'processing') && progress > 0 && (
         <div className="space-y-2">
-          <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+          <div className="w-full bg-gray-200 h-2.5 overflow-hidden">
             <div
-              className="bg-primary-600 h-2.5 rounded-full transition-all duration-300 ease-out"
-              style={{ width: `${progress}%` }}
+              className="h-2.5 transition-all duration-1000 ease-linear"
+              style={{ width: `${progress}%`, backgroundColor: '#009bdb' }}
             />
           </div>
           <p className="text-center text-sm text-gray-600">

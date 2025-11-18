@@ -91,17 +91,46 @@ class SlidesSpeakService:
             "synchronous": synchronous,
             "response_format": response_format,
             "theme": settings.slidespeak_template_id,  # Custom branded template for campus events
+            "include_cover": False,
+            "include_table_of_contents": False,
         }
 
         # Add custom instructions for digital screen optimization
-        instructions = """Do not include a table of contents slide. Start directly with content slides.
+        instructions = """Create a single-slide digital screen template following CBS event slide design standards:
 
-        Create event slides optimized for digital campus screens with these specifications:
-        - Use 16:9 widescreen format (standard digital display ratio)
-        - Large, readable text for viewing from a distance
-        - High contrast colors for better visibility
-        - Clean, uncluttered layout
-        - Focus on key event information: title, date/time, location, highlights
+        LAYOUT STRUCTURE:
+        - Large, bold headline at the top (white text, 72-96pt font size)
+        - Left side: Vertical information stack with event details (date, time, location, address)
+        - Right side: QR code in bottom right corner with "Learn More & Register Here" or similar call-to-action above it
+        - Bottom left: Institutional branding/logos
+
+        DESIGN REQUIREMENTS:
+        - 16:9 widescreen format (1920x1080 or similar)
+        - Dark or semi-dark background with high contrast
+        - Use CBS blue (#009bdb) as accent color strategically
+        - Large, readable sans-serif fonts for distance viewing
+        - Minimal text density - only essential information
+        - Clean, professional layout with clear visual hierarchy
+        - Background can include subtle patterns or relevant imagery (not overpowering)
+
+        INFORMATION HIERARCHY (in order of prominence):
+        1. Event Title/Name - Largest text, use accent color (CBS blue #009bdb) on 1-2 key words for emphasis
+        2. Event Details Block - Clear, organized stack format:
+           - Date (single day or date range like "December 5-7, 2025")
+           - Time (if applicable, e.g., "8:45 AM - 2:15 PM")
+           - Venue/Location name (e.g., "David Geffen Hall")
+           - Full address (if physical event)
+        3. Target Audience - Who should attend (e.g., "For staff at CBS Centers & Programs" or "All Students Welcome!")
+        4. Value Proposition - Brief description of what attendees will gain (e.g., "Learn about Private Equity and network with alums")
+        5. Call-to-Action + QR Code - Bottom right corner, with text like "Learn More & Register Here" above the QR code
+        6. Institutional Branding - Bottom left corner (program logos, partner organizations)
+
+        STYLE:
+        - Professional and clean
+        - High contrast for visibility
+        - White or light-colored text on dark backgrounds
+        - Consistent alignment and spacing
+        - Visual balance between text and graphics
         """
         if custom_user_instructions:
             instructions = f"{instructions}\n\nAdditional requirements: {custom_user_instructions}"

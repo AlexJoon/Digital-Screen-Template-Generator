@@ -137,7 +137,7 @@ async def generate_presentation(
         presentation_result = await slidespeak_service.generate_presentation(
             plain_text=request.plain_text,
             document_uuids=None,  # Don't use document upload, just plain text
-            length=3,  # Exactly 3 slides
+            length=1,  # Single slide for digital screen
             tone=tone,
             verbosity=verbosity,
             language=language,

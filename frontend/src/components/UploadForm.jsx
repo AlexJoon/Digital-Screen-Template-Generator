@@ -60,8 +60,9 @@ function UploadForm({ onUpload }) {
         className={`relative border-2 border-dashed p-8 transition-colors duration-200 ${
           dragActive
             ? 'border-primary-500 bg-primary-50'
-            : 'border-gray-300 hover:border-gray-400'
+            : 'hover:border-gray-400'
         }`}
+        style={{borderColor: dragActive ? undefined : '#ccc'}}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
@@ -161,8 +162,23 @@ function UploadForm({ onUpload }) {
         <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tone
+              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                <span>Tone</span>
+                <div className="relative group">
+                  <svg
+                    className="w-4 h-4 text-gray-400 cursor-help"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle cx="12" cy="12" r="10" strokeWidth="2" />
+                    <path strokeLinecap="round" strokeWidth="2" d="M12 16v-4M12 8h.01" />
+                  </svg>
+                  <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-gray-900 text-white text-xs z-10">
+                    Sets the writing style of your slides. Choose Professional for formal events, Casual for informal gatherings, Educational for learning sessions, or Funny for lighthearted presentations.
+                    <div className="absolute top-full left-4 -mt-1 border-4 border-transparent border-t-gray-900"></div>
+                  </div>
+                </div>
               </label>
               <select
                 value={options.tone}
@@ -178,8 +194,23 @@ function UploadForm({ onUpload }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Verbosity
+              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                <span>Verbosity</span>
+                <div className="relative group">
+                  <svg
+                    className="w-4 h-4 text-gray-400 cursor-help"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle cx="12" cy="12" r="10" strokeWidth="2" />
+                    <path strokeLinecap="round" strokeWidth="2" d="M12 16v-4M12 8h.01" />
+                  </svg>
+                  <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-gray-900 text-white text-xs z-10">
+                    Controls the amount of text on each slide. Concise provides minimal text with key points, Standard balances detail with readability, and Text Heavy includes comprehensive information.
+                    <div className="absolute top-full left-4 -mt-1 border-4 border-transparent border-t-gray-900"></div>
+                  </div>
+                </div>
               </label>
               <select
                 value={options.verbosity}
@@ -224,14 +255,25 @@ function UploadForm({ onUpload }) {
       <button
         type="submit"
         disabled={!file}
-        className={`w-full py-3 px-6 font-medium transition-all duration-200 ${
+        className={`w-full max-w-fit py-3 px-6 font-medium transition-all duration-200 flex items-center gap-2 ${
           file
-            ? 'bg-primary-600 hover:bg-primary-700 text-white'
+            ? 'text-white'
             : 'bg-[#f1f4f7] text-gray-500 cursor-not-allowed'
         }`}
-        style={{backgroundColor: !file ? '#f1f4f7' : undefined}}
+        style={{backgroundColor: file ? '#181a1c' : '#f1f4f7'}}
       >
-        Generate Screen Starting Points
+        <span>Generate Starting Template</span>
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke={file ? '#009bdb' : '#ccc'}
+          viewBox="0 0 24 24"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M5 12h14M12 5l7 7-7 7" />
+        </svg>
       </button>
     </form>
   )

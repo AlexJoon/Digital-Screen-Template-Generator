@@ -17,16 +17,29 @@ function App() {
     try {
       setStatus('uploading')
       setMessage('Uploading event content...')
-      setProgress(20)
+      setProgress(0)
       setDownloadUrl(null)
       setSynthesizedContent(null)
       setUploadOptions(options)
 
+      // Gradually increase progress to 30%
+      const uploadInterval = setInterval(() => {
+        setProgress(prev => Math.min(prev + 2, 30))
+      }, 100)
+
       const formData = new FormData()
       formData.append('file', file)
 
-      setProgress(40)
+      await new Promise(resolve => setTimeout(resolve, 500))
+      clearInterval(uploadInterval)
+      setProgress(30)
+
       setMessage('Analyzing content with AI...')
+
+      // Gradually increase progress to 70% during AI processing
+      const aiInterval = setInterval(() => {
+        setProgress(prev => Math.min(prev + 1, 70))
+      }, 200)
 
       // Step 1: Synthesize content with OpenAI
       const synthesisResponse = await axios.post(
@@ -36,19 +49,29 @@ function App() {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
-          timeout: 60000, // 1 minute timeout
-          onUploadProgress: (progressEvent) => {
-            const percentCompleted = Math.round((progressEvent.loaded * 30) / progressEvent.total)
-            setProgress(40 + percentCompleted)
-          }
+          timeout: 180000, // 3 minute timeout
         }
       )
 
-      setProgress(80)
+      clearInterval(aiInterval)
+      setProgress(70)
+
+      // Final progress to 100%
+      const finalInterval = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(finalInterval)
+            return 100
+          }
+          return prev + 3
+        })
+      }, 50)
 
       // Show synthesized content for review
       setSynthesizedContent(synthesisResponse.data.synthesized_text)
       setStatus('review')
+      await new Promise(resolve => setTimeout(resolve, 500))
+      clearInterval(finalInterval)
       setProgress(100)
       setMessage('Content ready for review')
 
@@ -70,8 +93,13 @@ function App() {
   const handleFinalize = async () => {
     try {
       setStatus('generating')
-      setMessage('Generating branded slides...')
-      setProgress(20)
+      setMessage('Packaging your screen template material...')
+      setProgress(0)
+
+      // Gradually increase progress to 40%
+      const initialInterval = setInterval(() => {
+        setProgress(prev => Math.min(prev + 2, 40))
+      }, 100)
 
       // Add optional parameters
       const params = new URLSearchParams({
@@ -85,7 +113,14 @@ function App() {
         params.append('custom_instructions', uploadOptions.customInstructions)
       }
 
+      await new Promise(resolve => setTimeout(resolve, 500))
+      clearInterval(initialInterval)
       setProgress(40)
+
+      // Gradually increase progress to 80% during generation
+      const generationInterval = setInterval(() => {
+        setProgress(prev => Math.min(prev + 1, 80))
+      }, 250)
 
       // Step 2: Generate presentation with synthesized content
       const response = await axios.post(
@@ -97,21 +132,35 @@ function App() {
           headers: {
             'Content-Type': 'application/json',
           },
-          timeout: 120000, // 2 minutes timeout
+          timeout: 300000, // 5 minutes timeout
         }
       )
 
+      clearInterval(generationInterval)
       setProgress(80)
       setMessage('Formatting for digital screens...')
 
+      // Final progress to 100%
+      const finalInterval = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(finalInterval)
+            return 100
+          }
+          return prev + 4
+        })
+      }, 50)
+
       if (response.data.status === 'success') {
+        await new Promise(resolve => setTimeout(resolve, 300))
+        clearInterval(finalInterval)
         setProgress(100)
         setStatus('success')
         setMessage('Event slides ready for digital screens!')
         setDownloadUrl(response.data.download_url)
       } else if (response.data.status === 'processing') {
         setStatus('processing')
-        setMessage('Creating your event slides. This may take a moment...')
+        setMessage('Creating your screen template. This may take a moment.')
         // Poll for status if async
         pollTaskStatus(response.data.task_id)
       }
@@ -178,18 +227,18 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-primary-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
         <div className="bg-white p-8 space-y-6 border-2" style={{borderColor: '#ccc'}}>
           {/* Header */}
-          <div className="text-left space-y-2">
-            <h1 className="text-3xl font-bold text-gray-900">
+          <div className="text-left">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
               Digital Screen Template Generator
             </h1>
-            <p className="text-gray-600">
-              Create digital screen starting points for digital campus screens
+            <p className="text-gray-600 font-bold pb-2 mb-6 border-b" style={{borderBottomColor: '#ccc'}}>
+              Create starting point templates for digital screens
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 mt-2">
               For staff at CBS Centers & Programs
             </p>
             <div className="flex items-center justify-start gap-2 text-xs text-gray-400 mt-3">
@@ -240,10 +289,10 @@ function App() {
           {/* Review synthesized content */}
           {status === 'review' && synthesizedContent && (
             <div className="space-y-4">
-              <div className="bg-primary-50 border border-primary-200 p-4">
-                <h3 className="font-semibold text-primary-900 mb-2">AI-Synthesized Event Content</h3>
-                <p className="text-sm text-primary-700 mb-3">
-                  Review the content that will be sent to generate your slides:
+              <div className="p-4" style={{backgroundColor: '#f1f4f7'}}>
+                <h3 className="font-semibold text-gray-900 mb-2 pb-2 border-b" style={{borderBottomColor: '#d9dfe5'}}>Content That Will Be Used</h3>
+                <p className="text-sm text-gray-700">
+                  Review the digital screen content that will be sent to generate your template:
                 </p>
               </div>
 
@@ -256,13 +305,25 @@ function App() {
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={handleFinalize}
-                  className="flex-1 bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-6 transition-colors duration-200"
+                  className="max-w-fit text-white font-medium py-3 px-6 transition-colors duration-200 flex items-center gap-2"
+                  style={{backgroundColor: '#181a1c'}}
                 >
-                  Finalize & Generate Slides
+                  <span>Finalize & Generate Slides</span>
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="#009bdb"
+                    viewBox="0 0 24 24"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
                 </button>
                 <button
                   onClick={handleReset}
-                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-6 transition-colors duration-200"
+                  className="max-w-fit bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-6 transition-colors duration-200"
                 >
                   Start Over
                 </button>
@@ -280,13 +341,25 @@ function App() {
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={handleDownload}
-                  className="flex-1 bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-6 transition-colors duration-200"
+                  className="max-w-fit text-white font-medium py-3 px-6 transition-colors duration-200 flex items-center gap-2"
+                  style={{backgroundColor: '#181a1c'}}
                 >
-                  Download Event Slides
+                  <span>Download Event Slides</span>
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="#009bdb"
+                    viewBox="0 0 24 24"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
                 </button>
                 <button
                   onClick={handleReset}
-                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-6 transition-colors duration-200"
+                  className="max-w-fit bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-6 transition-colors duration-200"
                 >
                   Create Another Event
                 </button>
@@ -303,16 +376,28 @@ function App() {
               />
               <button
                 onClick={handleReset}
-                className="w-full bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-6 transition-colors duration-200"
+                className="w-full max-w-fit text-white font-medium py-3 px-6 transition-colors duration-200 flex items-center gap-2"
+                style={{backgroundColor: '#181a1c'}}
               >
-                Try Again
+                <span>Try Again</span>
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="#009bdb"
+                  viewBox="0 0 24 24"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
               </button>
             </div>
           )}
 
           {/* Footer */}
-          <div className="text-center pt-4 border-t border-gray-200 space-y-3">
-            <div className="flex items-center justify-center gap-2">
+          <div className="text-right pt-4 border-t border-gray-200 space-y-3">
+            <div className="flex items-center justify-end gap-2">
               {/* CBS Hermes Logo */}
               <img
                 src="/cbs-logo.png"
