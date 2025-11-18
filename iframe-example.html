@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Event Slide Generator - Staff Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .iframe-container {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+        }
+
+        iframe {
+            width: 100%;
+            height: 700px;
+            border: none;
+            border-radius: 8px;
+        }
+
+        .info-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px;
+            color: white;
+        }
+
+        .info-section h2 {
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .info-section p {
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .code-block {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            margin-top: 15px;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .feature {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .feature h3 {
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            iframe {
+                height: 600px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Campus Event Slide Generator</h1>
+            <p class="subtitle">Staff Portal for Digital Screen Content</p>
+        </header>
+
+        <div class="iframe-container">
+            <iframe
+                src="http://localhost:5173"
+                title="Campus Event Slide Generator"
+                allow="fullscreen"
+            ></iframe>
+        </div>
+
+        <div class="info-section">
+            <h2>About This Tool</h2>
+            <p>
+                The Campus Event Slide Generator helps staff at Centers and Program Offices
+                quickly create professional event slides for digital screens across campus.
+                Simply upload your event content and get perfectly formatted slides in minutes.
+            </p>
+
+            <div class="features">
+                <div class="feature">
+                    <h3>📺 Digital Screen Optimized</h3>
+                    <p>16:9 format with large text and high contrast for maximum visibility</p>
+                </div>
+                <div class="feature">
+                    <h3>🤖 AI-Enhanced</h3>
+                    <p>Automatically formats event info into scannable, eye-catching content</p>
+                </div>
+                <div class="feature">
+                    <h3>📊 3-Slide Format</h3>
+                    <p>Title/Hook, Event Details, and Highlights - perfect for digital signage</p>
+                </div>
+                <div class="feature">
+                    <h3>🎨 Campus Branded</h3>
+                    <p>Automatically applies your campus logo and brand fonts</p>
+                </div>
+            </div>
+
+            <h2 style="margin-top: 30px;">For Web Administrators</h2>
+            <p>
+                To embed this tool on your staff portal or intranet, add this iframe code
+                to your page:
+            </p>
+            <div class="code-block">
+&lt;iframe
+  src="http://localhost:5173"
+  width="100%"
+  height="700px"
+  frameborder="0"
+  style="border: none; border-radius: 8px;"
+  allow="fullscreen"
+&gt;&lt;/iframe&gt;
+            </div>
+
+            <h2 style="margin-top: 30px;">Usage Guide for Staff</h2>
+            <div class="features">
+                <div class="feature">
+                    <h3>Step 1: Upload</h3>
+                    <p>Upload your event flyer, document, or content file (PDF, Word, etc.)</p>
+                </div>
+                <div class="feature">
+                    <h3>Step 2: Review</h3>
+                    <p>Optionally adjust tone and add specific event details</p>
+                </div>
+                <div class="feature">
+                    <h3>Step 3: Generate</h3>
+                    <p>Click generate and wait 1-2 minutes for processing</p>
+                </div>
+                <div class="feature">
+                    <h3>Step 4: Download</h3>
+                    <p>Download your PowerPoint and upload to digital signage system</p>
+                </div>
+            </div>
+
+            <p style="margin-top: 15px;">
+                <strong>Note:</strong> Slides are formatted in 16:9 widescreen for standard digital displays.
+                For best results, include event title, date/time, location, and key highlights in your upload.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Example: Listen for messages from the iframe (optional)
+        window.addEventListener('message', (event) => {
+            // Handle messages from the iframe if needed
+            console.log('Message from iframe:', event.data);
+        });
+    </script>
+</body>
+</html>
