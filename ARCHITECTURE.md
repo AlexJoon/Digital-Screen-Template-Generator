@@ -4,142 +4,143 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      Parent Website                          │
-│                  (External Website/App)                      │
-└───────────────────────────┬─────────────────────────────────┘
-                            │
-                            │ iframe embed
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                   SlideSpeak Tool (Frontend)                 │
-│                                                               │
+│                   CBS Digital Screen Generator               │
+│                        "Doug" Frontend                       │
+│                                                              │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
 │  │ UploadForm   │  │    App.jsx   │  │StatusDisplay │      │
 │  │  Component   │──│  (Main App)  │──│  Component   │      │
 │  └──────────────┘  └──────┬───────┘  └──────────────┘      │
-│                            │                                  │
+│                           │                                  │
+│  ┌──────────────┐  ┌──────┴───────┐  ┌──────────────┐      │
+│  │ SlidePreview │  │  FormInput   │  │FileUploadInput│     │
+│  │  (QR Code)   │  │  Component   │  │  Component   │      │
+│  └──────────────┘  └──────────────┘  └──────────────┘      │
+│                                                              │
 │                    React + Vite + Tailwind                   │
 └────────────────────────────┬────────────────────────────────┘
                              │
-                             │ HTTP/REST API
-                             │ (Axios)
+                             │ HTTP/REST API (Axios)
                              │
 ┌────────────────────────────▼────────────────────────────────┐
-│                 SlideSpeak Tool (Backend)                    │
-│                                                               │
+│                  CBS Digital Screen Generator                │
+│                         Backend                              │
+│                                                              │
 │  ┌──────────────────────────────────────────────────────┐   │
 │  │                    main.py                            │   │
 │  │              (FastAPI Application)                    │   │
-│  │                                                        │   │
-│  │  Endpoints:                                           │   │
-│  │  - POST /upload-and-generate                          │   │
-│  │  - GET  /task-status/{id}                             │   │
-│  │  - GET  /health                                        │   │
-│  └───────────────────┬──────────────┬────────────────────┘   │
-│                      │              │                         │
-│         ┌────────────▼──────┐  ┌───▼──────────────┐         │
-│         │  openai_service   │  │ slidespeak_service│         │
-│         │                   │  │                   │         │
-│         │ - synthesize_text │  │ - upload_document │         │
-│         │                   │  │ - generate_pres.  │         │
-│         └────────┬──────────┘  │ - get_task_status │         │
-│                  │              │ - download_pres.  │         │
-│                  │              └──────┬────────────┘         │
-└──────────────────┼─────────────────────┼────────────────────┘
+│  │                                                       │   │
+│  │  Endpoints:                                          │   │
+│  │  - POST /upload-metadata                             │   │
+│  │  - POST /export (PNG/JPG/PPTX)                       │   │
+│  │  - POST /submit-to-hive                              │   │
+│  │  - GET  /health                                       │   │
+│  └───────────────────┬──────────────┬───────────────────┘   │
+│                      │              │                        │
+│         ┌────────────▼──────┐  ┌───▼──────────────┐        │
+│         │  openai_service   │  │  Export Service  │        │
+│         │                   │  │                   │        │
+│         │ - analyze_image   │  │ - PNG Exporter   │        │
+│         │ - format_metadata │  │ - JPG Exporter   │        │
+│         └───────────────────┘  │ - PPTX Exporter  │        │
+│                                └──────┬───────────┘        │
+│                                       │                     │
+│                              ┌────────▼───────────┐        │
+│                              │   Hive Service     │        │
+│                              │                    │        │
+│                              │ - submit_request   │        │
+│                              │ - attach_file      │        │
+│                              └────────────────────┘        │
+└────────────────────────────────────────────────────────────┘
                    │                     │
                    │                     │
        ┌───────────▼────────┐  ┌─────────▼──────────┐
-       │    OpenAI API      │  │   SlideSpeak API   │
-       │                    │  │                     │
-       │ - GPT-4 Turbo      │  │ - Document Upload  │
-       │ - Text Synthesis   │  │ - Presentation Gen │
-       │                    │  │ - Task Management  │
+       │    OpenAI API      │  │     Hive API       │
+       │                    │  │                    │
+       │ - GPT-4o Vision    │  │ - Create Actions   │
+       │ - Image Analysis   │  │ - Attach Files     │
+       │                    │  │ - MarComms Project │
        └────────────────────┘  └────────────────────┘
 ```
 
 ## Data Flow
 
-### 1. Document Upload Flow
+### 1. Metadata Submission Flow
 
 ```
 User → UploadForm → App.jsx → FormData → Backend API
                                               ↓
-                                    /upload-and-generate
+                                    /upload-metadata
                                               ↓
-                                    Validate file type
+                                    Validate metadata
                                               ↓
-                                    Read file content
+                                    Analyze image (if present)
+                                        via GPT-4o Vision
                                               ↓
-                                    SlideSpeak Service
+                                    Format metadata summary
                                               ↓
-                                    Upload to SlideSpeak
+                                    Store in session
                                               ↓
-                                    Return document_uuid
+                                    Return summary to frontend
 ```
 
-### 2. Text Synthesis Flow
+### 2. Slide Export Flow
 
 ```
-Document Content → OpenAI Service → GPT-4 API
-                                        ↓
-                                    Synthesize
-                                        ↓
-                                  Optimized Text
-                                        ↓
-                                  Return to Backend
+User selects template + format → App.jsx → Backend API
+                                              ↓
+                                       /export endpoint
+                                              ↓
+                                    Get slide data from session
+                                              ↓
+                                    Select exporter by format:
+                                    ├─ PNG → PNGExporter
+                                    ├─ JPG → JPGExporter
+                                    └─ PPTX → PPTXExporter
+                                              ↓
+                                    Render slide locally:
+                                    - Gradient background
+                                    - Text layout
+                                    - Circular image
+                                    - QR code (if publication link)
+                                              ↓
+                                    Return binary file
+                                              ↓
+                                    Frontend downloads
 ```
 
-### 3. Presentation Generation Flow
+### 3. Hive Submission Flow
 
 ```
-Synthesized Text + document_uuid → SlideSpeak Service
-                                          ↓
-                                    Build payload:
-                                    - plain_text
-                                    - document_uuids
-                                    - length: 3
-                                    - tone
-                                    - verbosity
-                                    - custom_instructions
-                                    - use_branding_logo: true
-                                    - use_branding_fonts: true
-                                          ↓
-                                    POST to SlideSpeak API
-                                          ↓
-                                    Wait for completion
-                                    (synchronous: true)
-                                          ↓
-                                    Return download_url
-                                          ↓
-                                    Send to Frontend
-                                          ↓
-                                    User downloads .pptx
+User clicks "Submit to Hive" → App.jsx → Backend API
+                                              ↓
+                                       /submit-to-hive
+                                              ↓
+                                    Export slide as PNG
+                                              ↓
+                                    Create Hive action in
+                                    MarComms Service Requests
+                                              ↓
+                                    Attach PNG to action
+                                              ↓
+                                    Return action URL
+                                              ↓
+                                    Frontend shows success +
+                                    link to Hive
 ```
 
-### 4. Progress Tracking Flow
+### 4. QR Code Generation
 
 ```
-Frontend                          Backend
-
-Start Upload
-    ↓
-setStatus('uploading')
-setProgress(20%)
-    ↓                                ↓
-Upload File ──────────────────→ Receive File
-    ↓                                ↓
-setProgress(40%)              Upload to SlideSpeak
-setStatus('processing')             ↓
-    ↓                           Synthesize Text
-setProgress(60%)                    ↓
-    ↓                           Generate Slides
-setProgress(80%)                    ↓
-    ↓                           Return URL
-setProgress(100%) ←───────────── Response
-setStatus('success')
-    ↓
-Display Download Button
+Publication Link (user input)
+         ↓
+    Validate URL
+         ↓
+    Generate QR code:
+    ├─ Frontend: qrcode.react (preview)
+    └─ Backend: qrcode library (export)
+         ↓
+    Embed in slide render
 ```
 
 ## Component Architecture
@@ -149,27 +150,40 @@ Display Download Button
 ```
 App.jsx (Main Container)
 ├── State Management
-│   ├── status: 'idle' | 'uploading' | 'processing' | 'success' | 'error'
+│   ├── status: 'idle' | 'processing' | 'review' | 'generating' | 'success' | 'error'
 │   ├── message: string
-│   ├── downloadUrl: string | null
-│   └── progress: number (0-100)
+│   ├── metadataSummary: string | null
+│   ├── uploadOptions: object | null
+│   ├── selectedTemplate: 'template1' | 'template2' | 'template3'
+│   ├── selectedFormat: 'pptx' | 'png' | 'jpg'
+│   ├── exportedFile: { url, filename, format } | null
+│   └── hiveSubmission: { submitting, success, actionUrl, error } | null
 │
 ├── Event Handlers
-│   ├── handleFileUpload()
-│   ├── pollTaskStatus()
+│   ├── handleFormSubmit()
+│   ├── handleExport()
 │   ├── handleDownload()
-│   └── handleReset()
+│   ├── handleReset()
+│   └── handleSubmitToHive()
 │
 └── Child Components
     ├── UploadForm (when status === 'idle')
-    │   ├── File drop zone
-    │   ├── Advanced options
+    │   ├── FormInput components (headline, caption, description, etc.)
+    │   ├── FileUploadInput (image upload)
     │   └── Submit button
     │
-    └── StatusDisplay (when status !== 'idle')
-        ├── Status icon
-        ├── Progress bar
-        └── Status message
+    ├── StatusDisplay (processing/generating states)
+    │   ├── Loading spinner
+    │   ├── Progress bar
+    │   └── Status message
+    │
+    └── Review/Success Views
+        ├── Metadata summary
+        ├── SlidePreview (with QR code)
+        ├── Template selector
+        ├── Format selector
+        ├── Download button
+        └── Hive submission section
 ```
 
 ### Backend Services
@@ -177,28 +191,68 @@ App.jsx (Main Container)
 ```
 main.py (FastAPI App)
 ├── CORS Middleware
+├── Session storage (_metadata_store)
 ├── API Endpoints
-│   ├── POST /upload-and-generate
-│   ├── GET /task-status/{task_id}
-│   ├── GET /download/{url}
+│   ├── POST /upload-metadata
+│   ├── POST /export
+│   ├── POST /generate (legacy)
+│   ├── POST /submit-to-hive
+│   ├── GET /hive/projects
 │   └── GET /health
 │
 services/
 ├── openai_service.py
 │   └── OpenAIService
-│       ├── __init__(): Initialize OpenAI client
-│       └── synthesize_text(): Process document text
+│       ├── synthesize_text(): Format document text
+│       ├── analyze_image(): GPT-4o Vision analysis
+│       └── format_metadata_summary(): Human-readable summary
 │
-└── slidespeak_service.py
-    └── SlidesSpeakService
-        ├── __init__(): Initialize API config
-        ├── upload_document(): Upload to SlideSpeak
-        ├── generate_presentation(): Create slides
-        ├── get_task_status(): Check async status
-        └── download_presentation(): Download file
+├── exporters/
+│   ├── base.py
+│   │   ├── SlideData (dataclass)
+│   │   ├── TemplateConfig (dataclass)
+│   │   └── BaseExporter (ABC)
+│   │
+│   ├── export_service.py
+│   │   └── ExportService
+│   │       ├── get_exporter(): Factory method
+│   │       └── export(): Generate slide
+│   │
+│   ├── image_exporter.py
+│   │   ├── BaseImageExporter
+│   │   │   ├── _create_gradient()
+│   │   │   ├── _draw_text_wrapped()
+│   │   │   ├── _add_circular_image()
+│   │   │   ├── _generate_qr_code()
+│   │   │   └── _render_slide()
+│   │   ├── PNGExporter
+│   │   └── JPGExporter
+│   │
+│   └── pptx_exporter.py
+│       └── PPTXExporter
+│           ├── _add_gradient_background()
+│           ├── _add_text_box()
+│           ├── _add_circular_image()
+│           ├── _add_qr_code()
+│           └── export()
+│
+└── hive/
+    ├── hive_client.py
+    │   └── HiveClient
+    │       ├── create_action()
+    │       ├── attach_file()
+    │       └── get_projects()
+    │
+    └── hive_service.py
+        └── HiveService
+            └── submit_slide_request()
+
+models/
+└── slide_metadata.py
+    └── SlideMetadata (Pydantic model)
 ```
 
-## Technology Stack Details
+## Technology Stack
 
 ### Frontend Technologies
 
@@ -208,7 +262,7 @@ services/
 | Vite | 5.0.11 | Build tool & dev server |
 | Tailwind CSS | 3.4.1 | Styling framework |
 | Axios | 1.6.5 | HTTP client |
-| PostCSS | 8.4.33 | CSS processing |
+| qrcode.react | 4.x | QR code preview |
 
 ### Backend Technologies
 
@@ -217,93 +271,166 @@ services/
 | FastAPI | 0.109.0 | Web framework |
 | Uvicorn | 0.27.0 | ASGI server |
 | Python | 3.9+ | Runtime |
+| python-pptx | 1.0.0 | PowerPoint generation |
+| Pillow | 10.x | Image processing |
+| qrcode | 7.x | QR code generation |
+| numpy | 1.x | Fast gradient rendering |
 | httpx | 0.26.0 | Async HTTP client |
-| OpenAI | 1.10.0 | AI SDK |
-| Pydantic | 2.5.3 | Validation |
+| OpenAI | 1.10.0 | GPT-4o Vision API |
+
+## Export System
+
+### Template Configurations
+
+```python
+TEMPLATES = {
+    "template1": {  # CBS Blue
+        "background_color": "#003DA5",
+        "background_gradient_end": "#0052CC",
+        "text_color": "#FFFFFF",
+        "accent_color": "#009bdb"
+    },
+    "template2": {  # Dark Theme
+        "background_color": "#1a1a1a",
+        "background_gradient_end": "#2d2d2d",
+        "text_color": "#FFFFFF",
+        "accent_color": "#009bdb"
+    },
+    "template3": {  # Light Theme
+        "background_color": "#f8f9fa",
+        "background_gradient_end": "#e9ecef",
+        "text_color": "#181a1c",
+        "accent_color": "#003DA5"
+    }
+}
+```
+
+### Slide Layout
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Caption (uppercase, small)                                   │
+│                                                              │
+│ ┌─────────────────────────────┐  ┌──────────────────────┐  │
+│ │                             │  │    ┌──────────┐      │  │
+│ │  HEADLINE                   │  │    │  Image   │      │  │
+│ │  (Large, Bold)              │  │    │ (Circle) │      │  │
+│ │                             │  │    └──────────┘      │  │
+│ │  Description text here...   │  │                      │  │
+│ │                             │  │    ┌──────────┐      │  │
+│ │                             │  │    │ QR Code  │      │  │
+│ │                             │  │    └──────────┘      │  │
+│ │                             │  │   Scan for more      │  │
+│ └─────────────────────────────┘  └──────────────────────┘  │
+│                                                              │
+│ Author Name (accent color)                                   │
+│ Columbia Business School                                     │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ## API Specifications
 
-### SlideSpeak API Integration
+### Internal API Endpoints
 
-**Base URL:** `https://api.slidespeak.co/api/v1`
-
-**Authentication:**
-```python
-headers = {
-    "x-api-key": "your-api-key",
-    "Content-Type": "application/json"
-}
-```
-
-**Endpoints Used:**
-
-1. **Upload Document**
-   ```
-   POST /document/upload
-   Content-Type: multipart/form-data
-   Body: { file: <binary> }
-   Response: { document_uuid: "..." }
-   ```
-
-2. **Generate Presentation**
-   ```
-   POST /presentation/generate
-   Content-Type: application/json
-   Body: {
-     plain_text: string,
-     document_uuids: string[],
-     length: 3,
-     tone: string,
-     verbosity: string,
-     use_branding_logo: true,
-     use_branding_fonts: true,
-     synchronous: true,
-     response_format: "powerpoint"
-   }
-   Response: { download_url: "..." }
-   ```
-
-3. **Task Status**
-   ```
-   GET /task_status/{task_id}
-   Response: {
-     status: "completed" | "processing" | "failed",
-     download_url: "..."
-   }
-   ```
-
-### OpenAI API Integration
-
-**Model:** GPT-4 Turbo Preview
-
-**Request:**
-```python
+**POST /upload-metadata**
+```json
+Request (multipart/form-data):
 {
-  "model": "gpt-4-turbo-preview",
-  "messages": [
-    {
-      "role": "system",
-      "content": "You are an expert presentation synthesizer..."
-    },
-    {
-      "role": "user",
-      "content": "Transform this content: ..."
-    }
-  ],
-  "temperature": 0.7,
-  "max_tokens": 1000
+  "slide_category": "string",
+  "headline": "string",
+  "caption": "string (optional)",
+  "description": "string",
+  "author_name": "string (optional)",
+  "publication_link": "string (optional)",
+  "image": "file (optional)"
+}
+
+Response:
+{
+  "status": "success",
+  "metadata_summary": "Formatted human-readable summary...",
+  "session_id": "uuid"
 }
 ```
 
-## Configuration Management
+**POST /export**
+```json
+Request:
+{
+  "headline": "string",
+  "description": "string",
+  "caption": "string (optional)",
+  "author_name": "string (optional)",
+  "publication_link": "string (optional)",
+  "template_id": "template1",
+  "session_id": "uuid"
+}
+
+Query: ?format=pptx|png|jpg
+
+Response: Binary file with Content-Disposition header
+```
+
+**POST /submit-to-hive**
+```json
+Request:
+{
+  "headline": "string",
+  "description": "string",
+  "caption": "string (optional)",
+  "author_name": "string (optional)",
+  "publication_link": "string (optional)",
+  "template_id": "template1",
+  "session_id": "uuid",
+  "export_format": "png"
+}
+
+Response:
+{
+  "success": true,
+  "action_id": "hive-action-id",
+  "action_url": "https://hive.com/...",
+  "error": null
+}
+```
+
+### External API Integrations
+
+**OpenAI GPT-4o Vision** (Image Analysis)
+```python
+model = "gpt-4o"
+messages = [{
+    "role": "user",
+    "content": [
+        {"type": "text", "text": "Describe this image..."},
+        {"type": "image_url", "image_url": {"url": "data:image/...;base64,..."}}
+    ]
+}]
+```
+
+**Hive API**
+```
+Base URL: https://app.hive.com/api/v1
+
+POST /actions/create - Create action in project
+POST /actions/{id}/attach - Attach file to action
+GET /projects - List available projects
+```
+
+## Configuration
 
 ### Environment Variables
 
 **Backend (.env):**
 ```bash
-SLIDESPEAK_API_KEY=d918b19f-f2d8-4c9e-a2e4-f66ab3bd3557
-OPENAI_API_KEY=sk-placeholder-key
+OPENAI_API_KEY=sk-...
 CORS_ORIGINS=http://localhost:5173,http://localhost:3000
+
+# Hive API
+HIVE_API_KEY=...
+HIVE_USER_ID=...
+HIVE_WORKSPACE_ID=...
+HIVE_DEFAULT_PROJECT_ID=...  # MarComms Service Requests
 ```
 
 **Frontend (.env):**
@@ -311,255 +438,61 @@ CORS_ORIGINS=http://localhost:5173,http://localhost:3000
 VITE_API_BASE_URL=http://localhost:8000
 ```
 
-### Configuration Flow
+## Security
 
-```
-.env file → config.py → Settings class → Pydantic validation
-                              ↓
-                        settings object
-                              ↓
-                    Available throughout app
-```
+### API Key Protection
+- All external API keys stored in backend .env
+- Never exposed to frontend
+- Hive credentials for MarComms submission only
 
-## Security Architecture
+### CORS Configuration
+- Restricted to configured origins
+- Development: localhost:5173, localhost:3000
+- Production: Specific domain only
 
-### 1. Authentication Flow
+### File Validation
+- Image uploads validated by MIME type
+- Allowed: JPEG, PNG, GIF, WebP
+- Size limits enforced
 
-```
-Frontend Request
-    ↓
-Backend receives
-    ↓
-Extract API keys from config
-    ↓
-Add to headers
-    ↓
-Forward to external API
-    ↓
-Never expose keys to frontend
-```
+## Performance
 
-### 2. CORS Configuration
+### Local Generation Benefits
+- No external API latency for slide generation
+- Instant exports (< 1 second)
+- Works offline (except image analysis)
+- No rate limits on exports
 
-```
-Browser Request
-    ↓
-Check Origin
-    ↓
-Is origin in CORS_ORIGINS?
-    ├─ Yes → Allow request
-    └─ No → Block request (403)
-```
+### Optimizations
+- NumPy-accelerated gradient rendering
+- Async image analysis
+- Session-based metadata storage
+- Efficient binary streaming for downloads
 
-### 3. File Validation
-
-```
-File Upload
-    ↓
-Check MIME type
-    ↓
-Is in allowed_types?
-    ├─ Yes → Process
-    └─ No → Reject (400)
-```
-
-## Error Handling
-
-### Frontend Error States
-
-```
-try {
-  Upload & Process
-} catch (error) {
-  ├─ error.response → API error
-  │   └─ Display: error.response.data.detail
-  ├─ error.request → Network error
-  │   └─ Display: "Network error. Check connection."
-  └─ error.message → Other error
-      └─ Display: error.message
-}
-```
-
-### Backend Error Handling
-
-```
-Request → Validate → Process
-              ↓           ↓
-            Error?    Success?
-              ↓           ↓
-        HTTPException  Return data
-              ↓
-        status_code + detail
-              ↓
-          Frontend
-```
-
-## Performance Optimizations
-
-### Frontend
-
-1. **Code Splitting**
-   - Vite automatically splits code
-   - Lazy loading for routes (if added)
-
-2. **Asset Optimization**
-   - Minification in production
-   - Tree-shaking unused code
-   - CSS purging (Tailwind)
-
-3. **Caching**
-   - Browser caching for static assets
-   - Service worker (can be added)
-
-### Backend
-
-1. **Async Operations**
-   - All I/O operations use async/await
-   - Non-blocking HTTP requests
-
-2. **Connection Pooling**
-   - httpx AsyncClient reuses connections
-   - Efficient resource usage
-
-3. **Timeout Management**
-   - 60s for uploads
-   - 120s for generation
-   - 30s for status checks
-
-## Scalability Considerations
-
-### Vertical Scaling
-
-```
-Single Server
-    ↓
-Increase CPU/RAM
-    ↓
-Handle more concurrent requests
-```
-
-### Horizontal Scaling
-
-```
-Load Balancer
-    ↓
-┌─────┼─────┐
-│     │     │
-v1   v2   v3 (Multiple instances)
-│     │     │
-└─────┼─────┘
-    ↓
-Shared State (Redis/DB if needed)
-```
-
-### Caching Strategy
-
-```
-Request → Check Cache → Hit? → Return
-                ↓
-              Miss?
-                ↓
-          Process Request
-                ↓
-          Update Cache
-                ↓
-             Return
-```
-
-## Deployment Architecture
+## Deployment
 
 ### Development
-
 ```
-localhost:5173 (Frontend)
+localhost:5173 (Frontend - Vite)
       ↓
-localhost:8000 (Backend)
+localhost:8000 (Backend - Uvicorn)
       ↓
-External APIs
+External APIs (OpenAI, Hive)
 ```
 
 ### Production
-
 ```
-CDN (Frontend Static Files)
+Static Hosting (Frontend)
       ↓
-Load Balancer
+Application Server (Backend)
       ↓
-┌─────┼─────┐
-│     │     │
-API  API  API (Backend instances)
-│     │     │
-└─────┼─────┘
-      ↓
-External APIs
+External APIs (OpenAI, Hive)
 ```
 
-## Monitoring Architecture
+## Future Enhancements
 
-### Logging Flow
-
-```
-Application Event
-    ↓
-Logger
-    ↓
-├─ Console (Development)
-├─ File (Production)
-└─ External Service (Sentry, DataDog)
-```
-
-### Health Checks
-
-```
-Monitoring Service
-    ↓
-GET /health (every 30s)
-    ↓
-Response 200?
-    ├─ Yes → Healthy
-    └─ No → Alert
-```
-
-## Future Architecture Enhancements
-
-1. **Database Layer**
-   ```
-   Backend → PostgreSQL (User data, history)
-           → Redis (Caching, sessions)
-           → S3 (File storage)
-   ```
-
-2. **Message Queue**
-   ```
-   Upload → Queue (Celery/RabbitMQ)
-          → Worker processes
-          → Webhook callback
-   ```
-
-3. **Real-time Updates**
-   ```
-   Backend → WebSocket
-           → Push updates to Frontend
-           → Live progress
-   ```
-
-4. **Microservices**
-   ```
-   API Gateway
-       ↓
-   ├─ Upload Service
-   ├─ Processing Service
-   ├─ Generation Service
-   └─ Download Service
-   ```
-
-## Conclusion
-
-The architecture is designed to be:
-- **Simple**: Easy to understand and maintain
-- **Scalable**: Can grow from prototype to production
-- **Secure**: API keys protected, CORS configured
-- **Performant**: Async operations, optimized builds
-- **Flexible**: Easy to extend and customize
-
-This architecture provides a solid foundation for a production-ready application while maintaining simplicity and ease of deployment.
+1. **Additional Templates** - More CBS-branded designs
+2. **Batch Export** - Generate multiple formats at once
+3. **User Authentication** - Track usage per user
+4. **Template Editor** - Custom template creation
+5. **Analytics Dashboard** - Track slide generation metrics
