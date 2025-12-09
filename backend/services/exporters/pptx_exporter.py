@@ -84,7 +84,7 @@ class PPTXExporter(BaseExporter):
         p.font.size = Pt(font_size)
         p.font.color.rgb = self._hex_to_rgb(font_color)
         p.font.bold = bold
-        p.font.name = "Arial"
+        p.font.name = "Neue Haas Grotesk Display Pro"
         p.alignment = alignment
 
         return textbox

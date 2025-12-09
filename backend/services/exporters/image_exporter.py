@@ -64,8 +64,12 @@ class BaseImageExporter(BaseExporter):
 
     def _get_font(self, size: int, bold: bool = False) -> ImageFont.FreeTypeFont:
         """Get font with fallback to default"""
-        # Try common system fonts
+        # Try Neue Haas Grotesk Display Pro first, then common system fonts
         font_names = [
+            "/Library/Fonts/NeueHaasGroteskDisplayPro.ttf",  # macOS custom
+            "/Library/Fonts/Neue Haas Grotesk Display Pro.ttf",  # macOS custom alt
+            "~/Library/Fonts/NeueHaasGroteskDisplayPro.ttf",  # macOS user
+            "~/Library/Fonts/Neue Haas Grotesk Display Pro.ttf",  # macOS user alt
             "/System/Library/Fonts/Helvetica.ttc",  # macOS
             "/System/Library/Fonts/SFNSText.ttf",   # macOS SF
             "Arial.ttf",                             # Windows
@@ -75,6 +79,10 @@ class BaseImageExporter(BaseExporter):
 
         if bold:
             font_names = [
+                "/Library/Fonts/NeueHaasGroteskDisplayPro-Bold.ttf",  # macOS custom
+                "/Library/Fonts/Neue Haas Grotesk Display Pro Bold.ttf",  # macOS custom alt
+                "~/Library/Fonts/NeueHaasGroteskDisplayPro-Bold.ttf",  # macOS user
+                "~/Library/Fonts/Neue Haas Grotesk Display Pro Bold.ttf",  # macOS user alt
                 "/System/Library/Fonts/Helvetica.ttc",
                 "/System/Library/Fonts/SFNSText-Bold.otf",
                 "Arial Bold.ttf",
@@ -82,9 +90,11 @@ class BaseImageExporter(BaseExporter):
                 "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
             ] + font_names
 
+        import os
         for font_name in font_names:
             try:
-                return ImageFont.truetype(font_name, size)
+                expanded_path = os.path.expanduser(font_name)
+                return ImageFont.truetype(expanded_path, size)
             except (IOError, OSError):
                 continue
 
