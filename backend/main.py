@@ -1,6 +1,7 @@
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Query
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
+from starlette.middleware.base import BaseHTTPMiddleware
 from pydantic import BaseModel
 from typing import Optional
 from enum import Enum
@@ -11,8 +12,23 @@ from services.exporters import ExportService, ExportFormat, SlideData
 from services.hive import hive_service
 
 
+class IframeMiddleware(BaseHTTPMiddleware):
+    """Middleware to allow iframe embedding from allowed origins."""
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        # Allow iframe embedding - remove restrictive X-Frame-Options
+        # Set frame-ancestors to allow specific origins or * for any
+        if settings.allowed_iframe_origins:
+            origins = settings.allowed_iframe_origins
+            response.headers["Content-Security-Policy"] = f"frame-ancestors {origins}"
+        else:
+            # Default: allow all origins to embed
+            response.headers["Content-Security-Policy"] = "frame-ancestors *"
+        return response
+
+
 app = FastAPI(
-    title="CBS Digital Screen Generator",
+    title="Digitally Optimized Upload Generator",
     description="Generate branded digital screen slides in multiple formats",
     version="2.0.0"
 )
@@ -25,6 +41,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add iframe embedding support
+app.add_middleware(IframeMiddleware)
 
 # Initialize export service
 export_service = ExportService()

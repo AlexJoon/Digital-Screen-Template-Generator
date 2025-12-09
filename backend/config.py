@@ -9,6 +9,10 @@ class Settings(BaseSettings):
     # Frontend URL for CORS (set in production to your Railway frontend URL)
     frontend_url: Optional[str] = None
 
+    # Iframe embedding - space-separated list of allowed origins (e.g., "https://example.com https://other.com")
+    # Leave empty to allow all origins (*)
+    allowed_iframe_origins: Optional[str] = None
+
     # Hive API settings
     hive_api_key: str = "27330f26c1337418cbb8c23d6aee57ef"
     hive_user_id: str = "QhXfxx5zkav6NFmiA"
