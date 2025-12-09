@@ -1,5 +1,12 @@
 # Architecture Documentation
 
+This document describes the architecture of the CBS Digital Screen Generator ("Doug"), a full-stack application built with:
+
+- **Frontend**: React 18 + Vite + Tailwind CSS
+- **Backend**: Python 3.9+ with FastAPI
+- **Image Processing**: Pillow (PIL) + python-pptx
+- **External APIs**: OpenAI GPT-4o Vision, Hive API
+
 ## System Architecture
 
 ```
@@ -24,7 +31,7 @@
                              │
 ┌────────────────────────────▼────────────────────────────────┐
 │                  CBS Digital Screen Generator                │
-│                         Backend                              │
+│                    Backend (Python 3.9+)                     │
 │                                                              │
 │  ┌──────────────────────────────────────────────────────┐   │
 │  │                    main.py                            │   │
@@ -186,10 +193,12 @@ App.jsx (Main Container)
         └── Hive submission section
 ```
 
-### Backend Services
+### Backend Services (Python)
+
+The backend is built entirely in Python, using FastAPI as the web framework. All slide generation, image processing, and API integrations are handled by Python services.
 
 ```
-main.py (FastAPI App)
+main.py (FastAPI App - Python)
 ├── CORS Middleware
 ├── Session storage (_metadata_store)
 ├── API Endpoints
@@ -200,14 +209,14 @@ main.py (FastAPI App)
 │   ├── GET /hive/projects
 │   └── GET /health
 │
-services/
-├── openai_service.py
+services/ (Python modules)
+├── openai_service.py          # OpenAI SDK integration
 │   └── OpenAIService
 │       ├── synthesize_text(): Format document text
 │       ├── analyze_image(): GPT-4o Vision analysis
 │       └── format_metadata_summary(): Human-readable summary
 │
-├── exporters/
+├── exporters/                 # Slide generation (Pillow + python-pptx)
 │   ├── base.py
 │   │   ├── SlideData (dataclass)
 │   │   ├── TemplateConfig (dataclass)
@@ -218,17 +227,17 @@ services/
 │   │       ├── get_exporter(): Factory method
 │   │       └── export(): Generate slide
 │   │
-│   ├── image_exporter.py
+│   ├── image_exporter.py      # PNG/JPG export using Pillow
 │   │   ├── BaseImageExporter
-│   │   │   ├── _create_gradient()
+│   │   │   ├── _create_gradient()     # NumPy-accelerated
 │   │   │   ├── _draw_text_wrapped()
 │   │   │   ├── _add_circular_image()
-│   │   │   ├── _generate_qr_code()
+│   │   │   ├── _generate_qr_code()    # qrcode library
 │   │   │   └── _render_slide()
 │   │   ├── PNGExporter
 │   │   └── JPGExporter
 │   │
-│   └── pptx_exporter.py
+│   └── pptx_exporter.py       # PowerPoint export using python-pptx
 │       └── PPTXExporter
 │           ├── _add_gradient_background()
 │           ├── _add_text_box()
@@ -236,7 +245,7 @@ services/
 │           ├── _add_qr_code()
 │           └── export()
 │
-└── hive/
+└── hive/                      # Hive API integration (httpx)
     ├── hive_client.py
     │   └── HiveClient
     │       ├── create_action()
@@ -247,9 +256,9 @@ services/
         └── HiveService
             └── submit_slide_request()
 
-models/
+models/ (Pydantic models)
 └── slide_metadata.py
-    └── SlideMetadata (Pydantic model)
+    └── SlideMetadata (Pydantic model for validation)
 ```
 
 ## Technology Stack
