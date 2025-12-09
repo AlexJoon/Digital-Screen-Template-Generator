@@ -1,4 +1,4 @@
-# CBS Digital Screen Generator ("Doug")
+# Digitally Optimized Upload Generator ("Doug")
 
 A streamlined tool for Columbia Business School staff to create professional digital screen slides. Enter your content directly and generate ready-to-display slides in multiple formats (PowerPoint, PNG, JPG) with optional Hive integration for MarComms workflow.
 
