@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import UploadForm from './components/UploadForm'
 import StatusDisplay from './components/StatusDisplay'
@@ -11,11 +11,41 @@ function App() {
   const [message, setMessage] = useState('')
   const [progress, setProgress] = useState(0)
   const [metadataSummary, setMetadataSummary] = useState(null)
+  const [displayedSummary, setDisplayedSummary] = useState('') // For streaming animation
+  const [isStreaming, setIsStreaming] = useState(false)
   const [uploadOptions, setUploadOptions] = useState(null)
   const [selectedTemplate, setSelectedTemplate] = useState('template1')
   const [selectedFormat, setSelectedFormat] = useState('pptx')
   const [exportedFile, setExportedFile] = useState(null)
   const [hiveSubmission, setHiveSubmission] = useState(null) // { submitting, success, actionUrl, error }
+  const streamingRef = useRef(null)
+
+  // Streaming animation effect for metadata summary
+  useEffect(() => {
+    if (status === 'review' && metadataSummary && !isStreaming && displayedSummary !== metadataSummary) {
+      setIsStreaming(true)
+      setDisplayedSummary('')
+
+      let currentIndex = 0
+      const streamSpeed = 5 // milliseconds per character
+
+      streamingRef.current = setInterval(() => {
+        if (currentIndex < metadataSummary.length) {
+          setDisplayedSummary(metadataSummary.slice(0, currentIndex + 1))
+          currentIndex++
+        } else {
+          clearInterval(streamingRef.current)
+          setIsStreaming(false)
+        }
+      }, streamSpeed)
+    }
+
+    return () => {
+      if (streamingRef.current) {
+        clearInterval(streamingRef.current)
+      }
+    }
+  }, [status, metadataSummary])
 
   const handleFormSubmit = async (options) => {
     try {
@@ -195,10 +225,16 @@ function App() {
     if (exportedFile?.url) {
       window.URL.revokeObjectURL(exportedFile.url)
     }
+    // Clear streaming interval
+    if (streamingRef.current) {
+      clearInterval(streamingRef.current)
+    }
     setStatus('idle')
     setMessage('')
     setProgress(0)
     setMetadataSummary(null)
+    setDisplayedSummary('')
+    setIsStreaming(false)
     setUploadOptions(null)
     setSelectedTemplate('template1')
     setSelectedFormat('pptx')
@@ -356,29 +392,77 @@ function App() {
           {/* Review metadata */}
           {status === 'review' && metadataSummary && (
             <div className="space-y-4">
-              {/* Metadata Summary Section */}
-              <div className="p-4 bg-blue-50">
-                <h3 className="font-semibold text-gray-900 mb-3 pb-2 border-b border-blue-300">
-                  Your Slide Information
-                </h3>
-                <div className="text-sm text-gray-800 leading-relaxed">
-                  <pre className="whitespace-pre-wrap font-sans">
-                    {metadataSummary}
-                  </pre>
+              {/* Horizontal Step Timeline */}
+              <div className="p-4" style={{backgroundColor: '#f1f4f7'}}>
+                <div className="flex items-center justify-between">
+                  {/* Step 1 - Completed */}
+                  <div className="flex flex-col items-center flex-1">
+                    <div className="w-8 h-8 rounded-full bg-[#009bdb] flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="text-xs font-medium text-gray-700 mt-2 text-center">Enter Info</span>
+                  </div>
+
+                  {/* Connector Line - Completed */}
+                  <div className="flex-1 h-0.5 bg-[#009bdb] -mt-5"></div>
+
+                  {/* Step 2 - Current */}
+                  <div className="flex flex-col items-center flex-1">
+                    <div className="w-8 h-8 rounded-full bg-[#181a1c] flex items-center justify-center ring-2 ring-[#009bdb] ring-offset-2">
+                      <span className="text-white text-sm font-bold">2</span>
+                    </div>
+                    <span className="text-xs font-medium text-gray-900 mt-2 text-center">Select Template</span>
+                  </div>
+
+                  {/* Connector Line */}
+                  <div className="flex-1 h-0.5 bg-gray-300 -mt-5"></div>
+
+                  {/* Step 3 - Pending */}
+                  <div className="flex flex-col items-center flex-1">
+                    <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                      <span className="text-gray-600 text-sm font-bold">3</span>
+                    </div>
+                    <span className="text-xs font-medium text-gray-500 mt-2 text-center">Export</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="p-4" style={{backgroundColor: '#f1f4f7'}}>
-                <h3 className="font-semibold text-gray-900 mb-2 pb-2 border-b" style={{borderBottomColor: '#d9dfe5'}}>Next Steps</h3>
-                <p className="text-base text-gray-700">
-                  Review your slide information above, select a template and export format below.
-                </p>
+              {/* Metadata Summary Section */}
+              <div className="p-4 bg-blue-50">
+                <h3 className="font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-300">
+                  Your Screen Information
+                </h3>
+                <div className="text-sm text-gray-800 leading-relaxed">
+                  <pre className="whitespace-pre-wrap font-sans">
+                    {displayedSummary.split(/(https?:\/\/[^\s)]+)/).map((part, index) => {
+                      if (part.match(/^https?:\/\//)) {
+                        return (
+                          <a
+                            key={index}
+                            href={part}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 underline hover:text-blue-800"
+                          >
+                            {part}
+                          </a>
+                        );
+                      }
+                      return part;
+                    })}
+                    {isStreaming && (
+                      <span className="inline-block w-2 h-4 bg-blue-600 ml-0.5 animate-pulse" />
+                    )}
+                  </pre>
+                </div>
               </div>
 
               {/* Template and Format Selection */}
               <div className="p-4 border-2 border-gray-200 space-y-6">
                 {/* Template Selection */}
-                <div>
+                <div className="w-[65%] mx-auto">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Select Brand Template
                   </label>
@@ -468,11 +552,46 @@ function App() {
 
           {status === 'success' && (
             <div className="space-y-4">
-              <StatusDisplay
-                status={status}
-                message={message}
-                progress={progress}
-              />
+              {/* Horizontal Step Timeline - All Complete */}
+              <div className="p-4" style={{backgroundColor: '#f1f4f7'}}>
+                <div className="flex items-center justify-between">
+                  {/* Step 1 - Completed */}
+                  <div className="flex flex-col items-center flex-1">
+                    <div className="w-8 h-8 rounded-full bg-[#009bdb] flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="text-xs font-medium text-gray-700 mt-2 text-center">Enter Info</span>
+                  </div>
+
+                  {/* Connector Line - Completed */}
+                  <div className="flex-1 h-0.5 bg-[#009bdb] -mt-5"></div>
+
+                  {/* Step 2 - Completed */}
+                  <div className="flex flex-col items-center flex-1">
+                    <div className="w-8 h-8 rounded-full bg-[#009bdb] flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="text-xs font-medium text-gray-700 mt-2 text-center">Select Template</span>
+                  </div>
+
+                  {/* Connector Line - Completed */}
+                  <div className="flex-1 h-0.5 bg-[#009bdb] -mt-5"></div>
+
+                  {/* Step 3 - Completed */}
+                  <div className="flex flex-col items-center flex-1">
+                    <div className="w-8 h-8 rounded-full bg-[#009bdb] flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="text-xs font-medium text-gray-700 mt-2 text-center">Export</span>
+                  </div>
+                </div>
+              </div>
 
               {/* Export format buttons for additional formats */}
               <div className="p-4 border-2 border-gray-200">
@@ -482,21 +601,38 @@ function App() {
                     <button
                       key={option.value}
                       onClick={() => handleExport(option.value)}
-                      className="px-4 py-2 text-sm border-2 border-gray-300 hover:border-gray-400 transition-colors"
+                      className="px-4 py-2 text-sm border-2 border-gray-300 hover:border-gray-400 transition-colors flex items-center gap-2"
                     >
-                      {option.label}
+                      <span>{option.label}</span>
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="#009bdb"
+                        viewBox="0 0 24 24"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M1 4v6h6M23 20v-6h-6" />
+                        <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
+                      </svg>
                     </button>
                   ))}
                 </div>
               </div>
 
+              <StatusDisplay
+                status={status}
+                message={message}
+                progress={progress}
+              />
+
               {/* Download and Create Another buttons */}
-              <div className="p-4 border-2 border-gray-200">
-                <p className="text-sm text-gray-600 mb-3">Download your materials:</p>
-                <div className="flex flex-col sm:flex-row gap-3">
+              <div className="pb-8">
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <button
                     onClick={handleDownload}
-                    className="max-w-fit text-white font-medium py-3 px-6 transition-colors duration-200 flex items-center gap-2"
+                    className="text-white font-medium py-3 px-6 transition-colors duration-200 flex items-center gap-2"
                     style={{backgroundColor: '#181a1c'}}
                   >
                     <span>Download {exportedFile?.format.toUpperCase()}</span>
@@ -514,7 +650,7 @@ function App() {
                   </button>
                   <button
                     onClick={handleReset}
-                    className="max-w-fit bg-white text-gray-700 font-medium py-3 px-6 transition-colors duration-200 border-2 flex items-center gap-2"
+                    className="bg-white text-gray-700 font-medium py-3 px-6 transition-colors duration-200 border-2 flex items-center gap-2"
                     style={{borderColor: '#ccc'}}
                   >
                     <span>Create Another</span>

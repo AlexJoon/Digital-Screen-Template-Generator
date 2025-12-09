@@ -25,25 +25,62 @@ function UploadForm({ onSubmit }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Slide Category Selector */}
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">
-          Slide Category <span className="text-red-500">*</span>
-        </label>
-        <select
-          value={metadata.slideCategory}
-          onChange={(e) => updateMetadata('slideCategory', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
-        >
-          <option value="research_spotlight">Research Spotlight</option>
-          <option value="student_screens">Student Screens</option>
-        </select>
-        <p className="text-xs text-gray-500">Select the type of digital screen slide</p>
+      {/* Horizontal Step Timeline - Step 1 Current */}
+      <div className="p-4" style={{backgroundColor: '#f1f4f7'}}>
+        <div className="flex items-center justify-between">
+          {/* Step 1 - Current */}
+          <div className="flex flex-col items-center flex-1">
+            <div className="w-8 h-8 rounded-full bg-[#181a1c] flex items-center justify-center ring-2 ring-[#009bdb] ring-offset-2">
+              <span className="text-white text-sm font-bold">1</span>
+            </div>
+            <span className="text-xs font-medium text-gray-900 mt-2 text-center">Enter Info</span>
+          </div>
+
+          {/* Connector Line */}
+          <div className="flex-1 h-0.5 bg-gray-300 -mt-5"></div>
+
+          {/* Step 2 - Pending */}
+          <div className="flex flex-col items-center flex-1">
+            <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+              <span className="text-gray-600 text-sm font-bold">2</span>
+            </div>
+            <span className="text-xs font-medium text-gray-500 mt-2 text-center">Select Template</span>
+          </div>
+
+          {/* Connector Line */}
+          <div className="flex-1 h-0.5 bg-gray-300 -mt-5"></div>
+
+          {/* Step 3 - Pending */}
+          <div className="flex flex-col items-center flex-1">
+            <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+              <span className="text-gray-600 text-sm font-bold">3</span>
+            </div>
+            <span className="text-xs font-medium text-gray-500 mt-2 text-center">Export</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Digital Screen Category Selector */}
+      <div className="w-[65%] mx-auto">
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700">
+            Digital Screen Category <span className="text-red-500">*</span>
+          </label>
+          <select
+            value={metadata.slideCategory}
+            onChange={(e) => updateMetadata('slideCategory', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          >
+            <option value="research_spotlight">Research Spotlight</option>
+            <option value="student_screens">Student Screens</option>
+          </select>
+          <p className="text-xs text-gray-500">Select the type of digital screen slide</p>
+        </div>
       </div>
 
       {/* Metadata Fields */}
       <div className="space-y-4 p-4 bg-blue-50">
-        <h3 className="font-semibold text-gray-900 mb-3 pb-2 border-b border-blue-300">Slide Information</h3>
+        <h3 className="font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-300">Screen Information</h3>
 
         {metadata.slideCategory === 'research_spotlight' && (
           <>

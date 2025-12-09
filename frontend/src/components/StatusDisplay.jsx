@@ -27,7 +27,7 @@ function StatusDisplay({ status, message, progress }) {
     if (status === 'success') {
       return (
         <svg
-          className="h-12 w-12"
+          className="h-16 w-16"
           fill="none"
           stroke="#009bdb"
           viewBox="0 0 24 24"
@@ -75,7 +75,7 @@ function StatusDisplay({ status, message, progress }) {
   }
 
   return (
-    <div className="py-8 space-y-6">
+    <div className="pt-6 pb-2 space-y-3">
       {/* Status Icon */}
       <div className="flex justify-center">
         {getStatusIcon()}
@@ -83,7 +83,7 @@ function StatusDisplay({ status, message, progress }) {
 
       {/* Status Message */}
       <div className="text-center">
-        <p className={`text-base font-medium ${getStatusColor()}`} style={getStatusStyle()}>
+        <p className={`text-xl font-semibold ${getStatusColor()}`} style={getStatusStyle()}>
           {message}
         </p>
       </div>

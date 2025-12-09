@@ -52,10 +52,10 @@ function FormInput({
         maxLength={maxLength}
         rows={isTextarea ? rows : undefined}
         className={`w-full px-3 py-2 border ${
-          error ? 'border-red-500' : 'border-gray-300'
+          error ? 'border-red-500' : 'border-gray-400'
         } focus:outline-none focus:ring-2 focus:ring-primary-500 ${
           isTextarea ? 'resize-none' : ''
-        }`}
+        } text-gray-700`}
       />
 
       <div className="flex justify-between items-center">
