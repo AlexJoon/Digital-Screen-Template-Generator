@@ -1,24 +1,23 @@
 function StatusDisplay({ status, message, progress }) {
   const getStatusIcon = () => {
-    if (status === 'uploading' || status === 'processing') {
+    if (status === 'uploading' || status === 'processing' || status === 'generating') {
       return (
         <svg
           className="animate-spin h-12 w-12"
           fill="none"
           viewBox="0 0 24 24"
-          style={{ color: '#009bdb' }}
         >
           <circle
             className="opacity-25"
             cx="12"
             cy="12"
             r="10"
-            stroke="currentColor"
+            stroke="#ccc"
             strokeWidth="4"
           />
           <path
             className="opacity-75"
-            fill="currentColor"
+            fill="#009bdb"
             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
           />
         </svg>
@@ -28,9 +27,9 @@ function StatusDisplay({ status, message, progress }) {
     if (status === 'success') {
       return (
         <svg
-          className="h-12 w-12 text-green-500"
+          className="h-12 w-12"
           fill="none"
-          stroke="currentColor"
+          stroke="#009bdb"
           viewBox="0 0 24 24"
         >
           <path
@@ -65,9 +64,14 @@ function StatusDisplay({ status, message, progress }) {
   }
 
   const getStatusColor = () => {
-    if (status === 'success') return 'text-green-700'
+    if (status === 'success') return ''
     if (status === 'error') return 'text-red-700'
     return 'text-gray-700'
+  }
+
+  const getStatusStyle = () => {
+    if (status === 'success') return { color: '#181a1c' }
+    return {}
   }
 
   return (
@@ -79,15 +83,15 @@ function StatusDisplay({ status, message, progress }) {
 
       {/* Status Message */}
       <div className="text-center">
-        <p className={`text-base font-medium ${getStatusColor()}`}>
+        <p className={`text-base font-medium ${getStatusColor()}`} style={getStatusStyle()}>
           {message}
         </p>
       </div>
 
       {/* Progress Bar */}
-      {(status === 'uploading' || status === 'processing') && progress > 0 && (
+      {(status === 'uploading' || status === 'processing' || status === 'generating') && progress > 0 && (
         <div className="space-y-2">
-          <div className="w-full bg-gray-200 h-2.5 overflow-hidden">
+          <div className="w-full h-2.5 overflow-hidden" style={{ backgroundColor: '#ccc' }}>
             <div
               className="h-2.5 transition-all duration-1000 ease-linear"
               style={{ width: `${progress}%`, backgroundColor: '#009bdb' }}
@@ -100,24 +104,14 @@ function StatusDisplay({ status, message, progress }) {
       )}
 
       {/* Additional Info */}
-      {status === 'processing' && (
+      {(status === 'processing' || status === 'generating') && (
         <div className="text-center">
           <p className="text-sm text-gray-500">
-            This may take up to 2 minutes. Please don't close this window.
+            This may take up to 10 seconds. Please don't close this window.
           </p>
         </div>
       )}
 
-      {status === 'success' && (
-        <div className="text-center space-y-2">
-          <p className="text-sm text-gray-600">
-            Your 3-slide event presentation is ready for campus digital screens!
-          </p>
-          <p className="text-xs text-gray-500">
-            Optimized dimensions for digital display
-          </p>
-        </div>
-      )}
     </div>
   )
 }

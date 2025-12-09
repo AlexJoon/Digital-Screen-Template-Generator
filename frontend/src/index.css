@@ -44,7 +44,6 @@ body {
 /* Ensure the app fills the viewport when embedded in iframe */
 html, body, #root {
   height: 100%;
-  overflow: hidden;
 }
 
 /* Override browser default blue colors with CBS blue */

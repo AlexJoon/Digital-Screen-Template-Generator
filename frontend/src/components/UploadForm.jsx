@@ -1,272 +1,173 @@
 import { useState } from 'react'
+import FormInput from './FormInput'
+import FileUploadInput from './FileUploadInput'
 
-function UploadForm({ onUpload }) {
-  const [file, setFile] = useState(null)
-  const [dragActive, setDragActive] = useState(false)
-  const [options, setOptions] = useState({
-    tone: 'professional',
-    verbosity: 'standard',
-    language: 'en',
-    fetchImages: true,
-    customInstructions: ''
+function UploadForm({ onSubmit }) {
+  // Metadata fields
+  const [metadata, setMetadata] = useState({
+    headline: '',
+    caption: '',
+    description: '',
+    authorName: '',
+    image: null,
+    publicationLink: '',
+    slideCategory: 'research_spotlight'
   })
-  const [showAdvanced, setShowAdvanced] = useState(false)
-
-  const handleDrag = (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true)
-    } else if (e.type === 'dragleave') {
-      setDragActive(false)
-    }
-  }
-
-  const handleDrop = (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragActive(false)
-
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setFile(e.dataTransfer.files[0])
-    }
-  }
-
-  const handleFileChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0])
-    }
-  }
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (file) {
-      onUpload(file, options)
-    }
+    onSubmit({ metadata })
   }
 
-  const formatFileSize = (bytes) => {
-    if (bytes === 0) return '0 Bytes'
-    const k = 1024
-    const sizes = ['Bytes', 'KB', 'MB', 'GB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
+  const updateMetadata = (field, value) => {
+    setMetadata(prev => ({ ...prev, [field]: value }))
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* File Upload Area */}
-      <div
-        className={`relative border-2 border-dashed p-8 transition-colors duration-200 ${
-          dragActive
-            ? 'border-primary-500 bg-primary-50'
-            : 'hover:border-gray-400'
-        }`}
-        style={{borderColor: dragActive ? undefined : '#ccc'}}
-        onDragEnter={handleDrag}
-        onDragLeave={handleDrag}
-        onDragOver={handleDrag}
-        onDrop={handleDrop}
-      >
-        <input
-          type="file"
-          id="file-upload"
-          className="hidden"
-          onChange={handleFileChange}
-          accept=".pdf,.doc,.docx,.txt,.ppt,.pptx"
-        />
+      {/* Slide Category Selector */}
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">
+          Slide Category <span className="text-red-500">*</span>
+        </label>
+        <select
+          value={metadata.slideCategory}
+          onChange={(e) => updateMetadata('slideCategory', e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
+        >
+          <option value="research_spotlight">Research Spotlight</option>
+          <option value="student_screens">Student Screens</option>
+        </select>
+        <p className="text-xs text-gray-500">Select the type of digital screen slide</p>
+      </div>
 
-        {!file ? (
-          <label
-            htmlFor="file-upload"
-            className="flex flex-col items-center cursor-pointer"
-          >
-            <svg
-              className="w-12 h-12 text-gray-400 mb-3"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+      {/* Metadata Fields */}
+      <div className="space-y-4 p-4 bg-blue-50">
+        <h3 className="font-semibold text-gray-900 mb-3 pb-2 border-b border-blue-300">Slide Information</h3>
+
+        {metadata.slideCategory === 'research_spotlight' && (
+          <>
+            {/* Headline and Caption - 50/50 Grid */}
+            <div className="grid grid-cols-2 gap-4">
+              <FormInput
+                label="Headline"
+                value={metadata.headline}
+                onChange={(value) => updateMetadata('headline', value)}
+                placeholder="How Team Diversity Prevents Collusion in the Workplace"
+                required={true}
+                maxLength={80}
+                helpText="Title summarizing the topic"
               />
-            </svg>
-            <span className="text-gray-700 font-medium mb-1">
-              Upload your event content
-            </span>
-            <span className="text-gray-500 text-sm">
-              PDF, Word, PowerPoint, or text files with event details
-            </span>
-          </label>
-        ) : (
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <svg
-                className="w-10 h-10 text-primary-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              <div>
-                <p className="text-gray-900 font-medium">{file.name}</p>
-                <p className="text-gray-500 text-sm">{formatFileSize(file.size)}</p>
-              </div>
+
+              <FormInput
+                label="Caption"
+                value={metadata.caption}
+                onChange={(value) => updateMetadata('caption', value)}
+                placeholder="Newly Published"
+                maxLength={60}
+                helpText="Contextual note (optional)"
+              />
             </div>
-            <button
-              type="button"
-              onClick={() => setFile(null)}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
+
+            {/* Description - Full Width */}
+            <FormInput
+              label="Description"
+              value={metadata.description}
+              onChange={(value) => updateMetadata('description', value)}
+              placeholder="Research from Columbia Business School reveals how team diversity improves workplace ethics..."
+              required={true}
+              maxLength={300}
+              rows={3}
+              type="textarea"
+              helpText="Summary or blurb about the content"
+            />
+
+            {/* Author Name and Publication Link - 50/50 Grid */}
+            <div className="grid grid-cols-2 gap-4">
+              <FormInput
+                label="Author Name"
+                value={metadata.authorName}
+                onChange={(value) => updateMetadata('authorName', value)}
+                placeholder="Brett House"
+                maxLength={60}
+                helpText="Faculty, Researcher, or PhD student (optional)"
+              />
+
+              <FormInput
+                label="Publication Link"
+                value={metadata.publicationLink}
+                onChange={(value) => updateMetadata('publicationLink', value)}
+                placeholder="https://example.com/article"
+                type="url"
+                helpText="Link to paper or article (optional)"
+              />
+            </div>
+
+            {/* Image - Full Width */}
+            <FileUploadInput
+              label="Image"
+              value={metadata.image}
+              onChange={(value) => updateMetadata('image', value)}
+              required={true}
+              accept="image/*"
+              helpText="Upload faculty image"
+            />
+          </>
+        )}
+
+        {metadata.slideCategory === 'student_screens' && (
+          <>
+            <FormInput
+              label="Headline"
+              value={metadata.headline}
+              onChange={(value) => updateMetadata('headline', value)}
+              placeholder="Student Achievement Headline"
+              required={true}
+              maxLength={80}
+              helpText="Title for the student screen"
+            />
+
+            <FormInput
+              label="Description"
+              value={metadata.description}
+              onChange={(value) => updateMetadata('description', value)}
+              placeholder="Details about the student achievement..."
+              required={true}
+              maxLength={300}
+              rows={3}
+              type="textarea"
+              helpText="Description of the content"
+            />
+
+            <FileUploadInput
+              label="Image"
+              value={metadata.image}
+              onChange={(value) => updateMetadata('image', value)}
+              required={true}
+              accept="image/*"
+              helpText="Supporting image"
+            />
+          </>
         )}
       </div>
 
-      {/* Advanced Options Toggle */}
-      <button
-        type="button"
-        onClick={() => setShowAdvanced(!showAdvanced)}
-        className="text-primary-600 hover:text-primary-700 text-sm font-medium flex items-center space-x-1"
-      >
-        <span>{showAdvanced ? 'Hide' : 'Show'} Advanced Options</span>
-        <svg
-          className={`w-4 h-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-
-      {/* Advanced Options */}
-      {showAdvanced && (
-        <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                <span>Tone</span>
-                <div className="relative group">
-                  <svg
-                    className="w-4 h-4 text-gray-400 cursor-help"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle cx="12" cy="12" r="10" strokeWidth="2" />
-                    <path strokeLinecap="round" strokeWidth="2" d="M12 16v-4M12 8h.01" />
-                  </svg>
-                  <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-gray-900 text-white text-xs z-10">
-                    Sets the writing style of your slides. Choose Professional for formal events, Casual for informal gatherings, Educational for learning sessions, or Funny for lighthearted presentations.
-                    <div className="absolute top-full left-4 -mt-1 border-4 border-transparent border-t-gray-900"></div>
-                  </div>
-                </div>
-              </label>
-              <select
-                value={options.tone}
-                onChange={(e) => setOptions({ ...options, tone: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
-              >
-                <option value="professional">Professional</option>
-                <option value="casual">Casual</option>
-                <option value="funny">Funny</option>
-                <option value="educational">Educational</option>
-                <option value="sales_pitch">Sales Pitch</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                <span>Verbosity</span>
-                <div className="relative group">
-                  <svg
-                    className="w-4 h-4 text-gray-400 cursor-help"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle cx="12" cy="12" r="10" strokeWidth="2" />
-                    <path strokeLinecap="round" strokeWidth="2" d="M12 16v-4M12 8h.01" />
-                  </svg>
-                  <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-gray-900 text-white text-xs z-10">
-                    Controls the amount of text on each slide. Concise provides minimal text with key points, Standard balances detail with readability, and Text Heavy includes comprehensive information.
-                    <div className="absolute top-full left-4 -mt-1 border-4 border-transparent border-t-gray-900"></div>
-                  </div>
-                </div>
-              </label>
-              <select
-                value={options.verbosity}
-                onChange={(e) => setOptions({ ...options, verbosity: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
-              >
-                <option value="concise">Concise</option>
-                <option value="standard">Standard</option>
-                <option value="text-heavy">Text Heavy</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                checked={options.fetchImages}
-                onChange={(e) => setOptions({ ...options, fetchImages: e.target.checked })}
-                className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-              />
-              <span className="text-sm text-gray-700">Include event imagery</span>
-            </label>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Event Details (Optional)
-            </label>
-            <textarea
-              value={options.customInstructions}
-              onChange={(e) => setOptions({ ...options, customInstructions: e.target.value })}
-              placeholder="Add specific event details, location, date/time, or special instructions..."
-              className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
-              rows="3"
-            />
-          </div>
-        </div>
-      )}
-
       {/* Submit Button */}
-      <button
-        type="submit"
-        disabled={!file}
-        className={`w-full max-w-fit py-3 px-6 font-medium transition-all duration-200 flex items-center gap-2 ${
-          file
-            ? 'text-white'
-            : 'bg-[#f1f4f7] text-gray-500 cursor-not-allowed'
-        }`}
-        style={{backgroundColor: file ? '#181a1c' : '#f1f4f7'}}
-      >
-        <span>Generate Starting Template</span>
+      <div className="flex justify-center">
+        <button
+          type="submit"
+          disabled={!metadata.headline || !metadata.description || !metadata.image}
+          className={`py-3 px-6 font-medium transition-all duration-200 flex items-center gap-2 ${
+            metadata.headline && metadata.description && metadata.image
+              ? 'text-white'
+              : 'bg-[#f1f4f7] text-gray-500 cursor-not-allowed'
+          }`}
+          style={{backgroundColor: (metadata.headline && metadata.description && metadata.image) ? '#181a1c' : '#f1f4f7'}}
+        >
+          <span>Prep Screen Content</span>
         <svg
           className="w-5 h-5"
           fill="none"
-          stroke={file ? '#009bdb' : '#ccc'}
+          stroke={(metadata.headline && metadata.description && metadata.image) ? '#009bdb' : '#ccc'}
           viewBox="0 0 24 24"
           strokeWidth="2"
           strokeLinecap="round"
@@ -275,6 +176,7 @@ function UploadForm({ onUpload }) {
           <path d="M5 12h14M12 5l7 7-7 7" />
         </svg>
       </button>
+      </div>
     </form>
   )
 }
