@@ -480,14 +480,69 @@ localhost:8000 (Backend - Uvicorn)
 External APIs (OpenAI, Hive)
 ```
 
-### Production
+### Production (Railway)
+
+The application is deployed using Railway with two separate services:
+
 ```
-Static Hosting (Frontend)
-      ↓
-Application Server (Backend)
-      ↓
-External APIs (OpenAI, Hive)
+┌─────────────────────────────────────────────────────────────┐
+│                      Railway Platform                        │
+│                                                              │
+│  ┌─────────────────────┐    ┌─────────────────────┐        │
+│  │   Frontend Service  │    │   Backend Service   │        │
+│  │                     │    │                     │        │
+│  │  - React/Vite       │───▶│  - FastAPI          │        │
+│  │  - Static files     │    │  - Uvicorn          │        │
+│  │  - Served by serve  │    │  - Python 3.9+      │        │
+│  │                     │    │                     │        │
+│  │  railway.toml       │    │  Procfile           │        │
+│  │  .env.example       │    │  railway.toml       │        │
+│  └─────────────────────┘    │  .env.example       │        │
+│                              └──────────┬──────────┘        │
+│                                         │                    │
+└─────────────────────────────────────────┼────────────────────┘
+                                          │
+                    ┌─────────────────────┼─────────────────────┐
+                    │                     │                     │
+           ┌────────▼────────┐   ┌────────▼────────┐           │
+           │   OpenAI API    │   │    Hive API     │           │
+           │   (GPT-4o)      │   │  (MarComms)     │           │
+           └─────────────────┘   └─────────────────┘           │
 ```
+
+### Deployment Files
+
+```
+backend/
+├── Procfile              # web: uvicorn main:app --host 0.0.0.0 --port $PORT
+├── railway.toml          # Railway-specific configuration
+├── requirements.txt      # Python dependencies
+└── .env.example          # Environment variable template
+
+frontend/
+├── railway.toml          # Railway-specific configuration
+├── package.json          # Node dependencies
+└── .env.example          # Environment variable template
+```
+
+### Production Environment Variables
+
+**Backend Service:**
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `OPENAI_API_KEY` | Yes | OpenAI API key for GPT-4o Vision |
+| `FRONTEND_URL` | Yes | Production frontend URL for CORS |
+| `HIVE_API_KEY` | No | Hive API key for MarComms integration |
+| `HIVE_USER_ID` | No | Hive user ID |
+| `HIVE_WORKSPACE_ID` | No | Hive workspace ID |
+| `HIVE_DEFAULT_PROJECT_ID` | No | Default Hive project for submissions |
+
+**Frontend Service:**
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `VITE_API_BASE_URL` | Yes | Backend API URL |
+
+For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ## Future Enhancements
 
