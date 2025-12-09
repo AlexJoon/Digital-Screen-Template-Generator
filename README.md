@@ -36,7 +36,7 @@ A streamlined tool for Columbia Business School staff to create professional dig
 ## Project Structure
 
 ```
-slidespeak-tool/
+digitally-optimized-upload-generator/
 ├── backend/
 │   ├── services/
 │   │   ├── openai_service.py      # OpenAI GPT-4o Vision integration
