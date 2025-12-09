@@ -1,25 +1,29 @@
-# Campus Event Slide Generator
+# CBS Digital Screen Generator ("Doug")
 
-A streamlined tool for campus staff to create professional 3-slide event presentations optimized for digital screens across campus. Upload event content and generate ready-to-display PowerPoint slides formatted for digital signage.
+A streamlined tool for Columbia Business School staff to create professional digital screen slides. Enter your content directly and generate ready-to-display slides in multiple formats (PowerPoint, PNG, JPG) with optional Hive integration for MarComms workflow.
 
 ## Features
 
-- **Event Content Upload**: Support for PDF, Word, PowerPoint, and text files with event information
-- **AI-Powered Optimization**: OpenAI processes content specifically for digital screen display
-- **SlideSpeak Integration**: Automatic generation of 3-slide presentations optimized for campus digital screens
-- **Custom Branded Template**: Uses your pre-configured SlideSpeak template (ID: `cm6iali9y000njl03qw4hvuk3`)
-- **Digital Screen Format**: 16:9 widescreen with large, readable text and high contrast
-- **Staff-Friendly Interface**: Simple workflow designed for busy center and program office staff
-- **Real-time Progress**: Live upload and processing status updates
-- **Consistent Branding**: Every presentation uses your branded template automatically
+- **Direct Content Entry**: Enter headline, description, caption, and author information directly
+- **Image Upload**: Upload faculty/speaker images with automatic circular cropping
+- **QR Code Generation**: Automatically generate QR codes from publication links
+- **Multiple Export Formats**: Download as PowerPoint (.pptx), PNG, or JPG
+- **Template Selection**: Choose from CBS Blue, Dark, or Light themes
+- **Live Preview**: See your slide in real-time as you build it
+- **Hive Integration**: Submit slides directly to MarComms Service Requests in Hive
+- **AI Image Analysis**: GPT-4o Vision analyzes uploaded images for context
+- **Local Generation**: All slide rendering happens locally for instant exports
 
 ## Tech Stack
 
-### Backend
+### Backend (Python 3.9+)
 - **FastAPI**: Modern, fast Python web framework
-- **Python 3.9+**: Core runtime
-- **httpx**: Async HTTP client for API calls
-- **OpenAI SDK**: AI text synthesis
+- **Pillow (PIL)**: Image processing and PNG/JPG export
+- **python-pptx**: PowerPoint generation
+- **NumPy**: Fast gradient rendering
+- **qrcode**: QR code generation
+- **OpenAI SDK**: GPT-4o Vision for image analysis
+- **httpx**: Async HTTP client for Hive API
 - **Pydantic**: Data validation and settings management
 
 ### Frontend
@@ -27,6 +31,7 @@ A streamlined tool for campus staff to create professional 3-slide event present
 - **Vite**: Fast build tool and dev server
 - **Tailwind CSS**: Utility-first CSS framework
 - **Axios**: HTTP client for API requests
+- **qrcode.react**: QR code preview in browser
 
 ## Project Structure
 
@@ -34,38 +39,51 @@ A streamlined tool for campus staff to create professional 3-slide event present
 slidespeak-tool/
 ├── backend/
 │   ├── services/
-│   │   ├── __init__.py
-│   │   ├── openai_service.py      # OpenAI integration
-│   │   └── slidespeak_service.py  # SlideSpeak API integration
-│   ├── config.py                   # Configuration management
-│   ├── main.py                     # FastAPI application
-│   ├── requirements.txt            # Python dependencies
-│   ├── .env                        # Environment variables (not in git)
-│   └── .env.example                # Environment template
+│   │   ├── openai_service.py      # OpenAI GPT-4o Vision integration
+│   │   ├── exporters/             # Slide generation
+│   │   │   ├── base.py            # Base classes and templates
+│   │   │   ├── export_service.py  # Export orchestration
+│   │   │   ├── image_exporter.py  # PNG/JPG export (Pillow)
+│   │   │   └── pptx_exporter.py   # PowerPoint export
+│   │   └── hive/                  # Hive API integration
+│   │       ├── hive_client.py     # API client
+│   │       └── hive_service.py    # Service layer
+│   ├── config.py                  # Configuration management
+│   ├── main.py                    # FastAPI application
+│   ├── requirements.txt           # Python dependencies
+│   ├── Procfile                   # Railway deployment
+│   ├── railway.toml               # Railway configuration
+│   └── .env.example               # Environment template
 │
-└── frontend/
-    ├── src/
-    │   ├── components/
-    │   │   ├── UploadForm.jsx      # File upload component
-    │   │   └── StatusDisplay.jsx   # Status and progress display
-    │   ├── App.jsx                 # Main application
-    │   ├── main.jsx                # Entry point
-    │   └── index.css               # Global styles
-    ├── index.html                  # HTML template
-    ├── package.json                # Node dependencies
-    ├── vite.config.js              # Vite configuration
-    ├── tailwind.config.js          # Tailwind configuration
-    ├── .env                        # Environment variables (not in git)
-    └── .env.example                # Environment template
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── UploadForm.jsx     # Main form component
+│   │   │   ├── FormInput.jsx      # Reusable form input
+│   │   │   ├── FileUploadInput.jsx # Image upload component
+│   │   │   ├── SlidePreview.jsx   # Live slide preview
+│   │   │   └── StatusDisplay.jsx  # Status and progress
+│   │   ├── App.jsx                # Main application
+│   │   ├── main.jsx               # Entry point
+│   │   └── index.css              # Global styles
+│   ├── public/
+│   │   └── cbs-logo.png           # CBS Hermes logo
+│   ├── package.json               # Node dependencies
+│   ├── vite.config.js             # Vite configuration
+│   ├── railway.toml               # Railway configuration
+│   └── .env.example               # Environment template
+│
+├── ARCHITECTURE.md                # Detailed architecture documentation
+├── DEPLOYMENT.md                  # Railway deployment guide
+└── README.md                      # This file
 ```
 
-## Setup Instructions
+## Quick Start
 
 ### Prerequisites
 
 - Python 3.9 or higher
 - Node.js 18 or higher
-- SlideSpeak API key
 - OpenAI API key
 
 ### Backend Setup
@@ -93,9 +111,14 @@ cp .env.example .env
 
 5. Edit `.env` and add your API keys:
 ```
-SLIDESPEAK_API_KEY=your_slidespeak_api_key_here
 OPENAI_API_KEY=your_openai_api_key_here
 CORS_ORIGINS=http://localhost:5173,http://localhost:3000
+
+# Optional: Hive API settings for MarComms integration
+HIVE_API_KEY=your_hive_api_key
+HIVE_USER_ID=your_hive_user_id
+HIVE_WORKSPACE_ID=your_hive_workspace_id
+HIVE_DEFAULT_PROJECT_ID=your_hive_project_id
 ```
 
 6. Run the backend server:
@@ -117,112 +140,98 @@ cd frontend
 npm install
 ```
 
-3. Configure environment variables:
-```bash
-cp .env.example .env
-```
-
-4. Edit `.env` if needed (default points to `http://localhost:8000`):
-```
-VITE_API_BASE_URL=http://localhost:8000
-```
-
-5. Run the development server:
+3. Run the development server:
 ```bash
 npm run dev
 ```
 
 The application will be available at `http://localhost:5173`
 
+### Quick Start Script
+
+For convenience, run both servers at once:
+```bash
+./start.sh
+```
+
 ## Usage
 
-### Basic Workflow
+### Creating a Slide
 
-1. **Upload Document**: Drag and drop or click to select a document (PDF, Word, PowerPoint, or text file)
-2. **Configure Options** (Optional): Set tone, verbosity, and other presentation parameters
-3. **Generate**: Click "Generate Presentation" to start the process
-4. **Download**: Once complete, download your branded 3-slide PowerPoint presentation
-
-### Advanced Options
-
-- **Tone**: Choose from professional, casual, funny, educational, or sales pitch
-- **Verbosity**: Select concise, standard, or text-heavy content
-- **Include Images**: Toggle stock image inclusion
-- **Custom Instructions**: Add specific requirements for your presentation
+1. **Select Category**: Choose your slide type (Research, Event, Faculty, etc.)
+2. **Enter Content**:
+   - **Headline**: Main title for the slide
+   - **Caption** (optional): Small text above the headline
+   - **Description**: Body text for the slide
+   - **Author Name** (optional): Name to highlight in accent color
+   - **Publication Link** (optional): URL for QR code generation
+3. **Upload Image** (optional): Faculty photo or relevant image
+4. **Review**: Check the AI-generated summary
+5. **Select Template**: Choose CBS Blue, Dark, or Light theme
+6. **Export**: Download as PowerPoint, PNG, or JPG
+7. **Submit to Hive** (optional): Send directly to MarComms
 
 ### API Endpoints
 
-#### POST `/upload-and-generate`
-Upload a document and generate a presentation.
+#### POST `/upload-metadata`
+Submit slide content and get a summary.
 
-**Parameters:**
-- `file`: The document file (multipart/form-data)
-- `tone`: Presentation tone (default: "professional")
-- `verbosity`: Content verbosity (default: "standard")
-- `language`: Presentation language (default: "en")
-- `fetch_images`: Include stock images (default: true)
-- `custom_instructions`: Additional instructions (optional)
+**Parameters (multipart/form-data):**
+- `slide_category`: Type of slide
+- `headline`: Main title (required)
+- `description`: Body text (required)
+- `caption`: Small caption text
+- `author_name`: Author to highlight
+- `publication_link`: URL for QR code
+- `image`: Image file (JPEG, PNG, GIF, WebP)
 
-**Response:**
+#### POST `/export`
+Generate and download a slide.
+
+**Query:** `?format=pptx|png|jpg`
+
+**Body (JSON):**
 ```json
 {
-  "status": "success",
-  "message": "Presentation generated successfully",
-  "download_url": "https://..."
+  "headline": "Your Headline",
+  "description": "Your description text",
+  "template_id": "template1",
+  "session_id": "uuid-from-upload"
 }
 ```
 
-#### GET `/task-status/{task_id}`
-Check the status of an async generation task.
+#### POST `/submit-to-hive`
+Submit slide to Hive MarComms project.
 
 #### GET `/health`
 Health check endpoint.
 
-## Embedding as iframe
+## Templates
 
-The application is designed to be embedded as an iframe:
+Three CBS-branded templates are available:
 
-```html
-<iframe
-  src="http://localhost:5173"
-  width="100%"
-  height="800px"
-  frameborder="0"
-  style="border: none; border-radius: 8px;"
-></iframe>
-```
+| Template | Background | Text | Accent |
+|----------|------------|------|--------|
+| CBS Blue (default) | Blue gradient | White | Cyan |
+| Dark | Dark gray gradient | White | Cyan |
+| Light | Light gray gradient | Dark | Blue |
 
-### Production Deployment
+## Deployment
 
-For production, update CORS settings in `backend/.env`:
-```
-CORS_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
-```
+The application is configured for Railway deployment. See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
 
-And update the frontend API URL in `frontend/.env`:
-```
-VITE_API_BASE_URL=https://api.yourdomain.com
-```
+### Quick Deploy
 
-## Configuration
+1. Push to GitHub
+2. Connect repository to Railway
+3. Create two services (backend and frontend)
+4. Set environment variables
+5. Deploy
 
-### Presentation Settings
+## Documentation
 
-The tool is configured to generate:
-- **Exactly 3 slides** (excluding table of contents)
-- **No table of contents** (custom instruction to skip it)
-- **Branded slides** with your SlideSpeak brand settings (logo and fonts)
-- **PowerPoint format** (.pptx) output
-
-### Branding
-
-Brand settings (logo, fonts, colors) are configured in your SlideSpeak account:
-1. Log in to SlideSpeak
-2. Go to Brand Settings
-3. Upload your brand logo
-4. Configure brand fonts and colors
-
-These settings will be automatically applied to all generated presentations.
+- [ARCHITECTURE.md](ARCHITECTURE.md) - Detailed system architecture
+- [DEPLOYMENT.md](DEPLOYMENT.md) - Railway deployment guide
 
 ## Development
 
@@ -230,7 +239,6 @@ These settings will be automatically applied to all generated presentations.
 
 **Backend:**
 ```bash
-# The backend runs as-is with uvicorn in production
 uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
@@ -239,45 +247,6 @@ uvicorn main:app --host 0.0.0.0 --port 8000
 npm run build
 ```
 
-The built files will be in the `dist` directory.
-
-### Testing
-
-Upload a sample document and verify:
-- File upload works correctly
-- Progress indicators display properly
-- OpenAI synthesis processes the content
-- SlideSpeak generates exactly 3 slides
-- Branding is applied correctly
-- Download works in iframe context
-
-## Troubleshooting
-
-### Backend Issues
-
-- **CORS errors**: Verify CORS_ORIGINS in `.env` includes your frontend URL
-- **API key errors**: Check that your SlideSpeak and OpenAI API keys are valid
-- **Timeout errors**: Large files may take longer; consider increasing timeout values
-
-### Frontend Issues
-
-- **Cannot connect to backend**: Verify VITE_API_BASE_URL points to the correct backend URL
-- **Iframe issues**: Ensure parent page and iframe are served over the same protocol (both HTTP or both HTTPS)
-
-## API Keys
-
-### SlideSpeak API
-Your API key: `d918b19f-f2d8-4c9e-a2e4-f66ab3bd3557`
-
-### OpenAI API
-Replace the placeholder key in `backend/.env` with your actual OpenAI API key.
-
-## License
-
-MIT License - Feel free to modify and use for your projects.
-
 ## Support
 
-For issues with:
-- SlideSpeak API: [SlideSpeak Documentation](https://docs.slidespeak.co/)
-- OpenAI API: [OpenAI Documentation](https://platform.openai.com/docs)
+For questions or issues, contact [communications@gsb.columbia.edu](mailto:communications@gsb.columbia.edu)
