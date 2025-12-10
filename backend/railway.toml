@@ -2,7 +2,7 @@
 builder = "nixpacks"
 
 [deploy]
-startCommand = "python -c 'import main' && uvicorn main:app --host 0.0.0.0 --port $PORT --timeout-keep-alive 120"
+startCommand = "python -c 'import main' && uvicorn main:app --host 0.0.0.0 --port 8000 --timeout-keep-alive 120"
 healthcheckPath = "/health"
 healthcheckTimeout = 300
 restartPolicyType = "on_failure"
