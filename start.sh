@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# SlideSpeak Tool - Quick Start Script
+# Doug - CBS Digital Screen Generator - Quick Start Script
 
 echo "======================================"
-echo "SlideSpeak Ingestion Tool - Quick Start"
+echo "Doug - CBS Digital Screen Generator"
 echo "======================================"
 echo ""
 
