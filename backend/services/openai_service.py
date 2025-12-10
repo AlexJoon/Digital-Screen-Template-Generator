@@ -1,67 +1,14 @@
 from openai import OpenAI
 from config import settings
-from typing import Optional
+from typing import Optional, Dict, Any
 import base64
+import json
+import re
 
 
 class OpenAIService:
     def __init__(self):
         self.client = OpenAI(api_key=settings.openai_api_key)
-
-    async def synthesize_text(self, document_text: str) -> str:
-        """
-        Return the document text verbatim with normalized whitespace formatting.
-        All words and content are preserved exactly as extracted, with natural
-        paragraph breaks for readability.
-
-        Args:
-            document_text: Raw text extracted from uploaded document
-
-        Returns:
-            The same text with paragraph formatting preserved
-        """
-        # Clean up excessive whitespace while preserving all words
-        import re
-
-        # Replace multiple spaces with single space and normalize line breaks
-        text = re.sub(r' +', ' ', document_text)
-
-        # Replace all newlines with spaces first to get one continuous text
-        text = text.replace('\n', ' ')
-
-        # Clean up any multiple spaces created
-        text = re.sub(r' +', ' ', text)
-
-        # Now intelligently add paragraph breaks based on common section patterns
-        # Look for section headers (typically start with capital letters and end with colon or are standalone)
-        section_patterns = [
-            r'(Event Overview)',
-            r'(Event Description)',
-            r'(Agenda)',
-            r'(Featured Panelists)',
-            r'(Who Should Attend)',
-            r'(Registration)',
-            r'(Parking & Directions)',
-            r'(Contact Information)',
-            r'(Event Title:)',
-            r'(Date:)',
-            r'(Time:)',
-            r'(Location:)',
-            r'(Dress Code:)',
-        ]
-
-        # Add double newlines before major sections to create paragraphs
-        for pattern in section_patterns:
-            text = re.sub(pattern, r'\n\n\1', text)
-
-        # Clean up any triple+ newlines to just double newlines
-        text = re.sub(r'\n{3,}', '\n\n', text)
-
-        # Clean up spaces before punctuation
-        text = re.sub(r'\s+([,.:;!?])', r'\1', text)
-
-        # Clean up leading/trailing whitespace
-        return text.strip()
 
     async def analyze_image(self, image_data: bytes, image_type: str = "image/jpeg") -> str:
         """
@@ -104,6 +51,76 @@ class OpenAIService:
         except Exception as e:
             print(f"Error analyzing image: {str(e)}")
             return "an uploaded image"
+
+    async def detect_face_position(self, image_data: bytes, image_type: str = "image/jpeg") -> Dict[str, Any]:
+        """
+        Analyze an image using GPT-4 Vision to detect face position for smart cropping.
+
+        Args:
+            image_data: Binary image data
+            image_type: MIME type of the image
+
+        Returns:
+            Dictionary with face detection results:
+            {
+                'has_face': bool,
+                'face_center_x': float (0-1, percentage from left),
+                'face_center_y': float (0-1, percentage from top),
+                'face_size': float (0-1, relative to image size)
+            }
+        """
+        try:
+            base64_image = base64.b64encode(image_data).decode('utf-8')
+
+            response = self.client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": """Analyze this image for face detection and positioning.
+
+If there is a human face visible in the image, return a JSON object with:
+- "has_face": true
+- "face_center_x": a number between 0 and 1 representing the horizontal center of the face (0 = left edge, 1 = right edge)
+- "face_center_y": a number between 0 and 1 representing the vertical center of the face (0 = top edge, 1 = bottom edge)
+- "face_size": a number between 0 and 1 representing how much of the image the face occupies (0.1 = small, 0.5 = half the image)
+
+If there is NO human face visible, return:
+{"has_face": false}
+
+Return ONLY the JSON object, no other text."""
+                            },
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:{image_type};base64,{base64_image}"
+                                }
+                            }
+                        ]
+                    }
+                ],
+                max_tokens=150
+            )
+
+            response_text = response.choices[0].message.content.strip()
+
+            # Parse JSON from response (handle markdown code blocks)
+            json_match = re.search(r'\{[^}]+\}', response_text)
+            if json_match:
+                result = json.loads(json_match.group())
+                return result
+
+            return {"has_face": False}
+
+        except json.JSONDecodeError as e:
+            print(f"Error parsing face detection response: {str(e)}")
+            return {"has_face": False}
+        except Exception as e:
+            print(f"Error detecting face position: {str(e)}")
+            return {"has_face": False}
 
     def format_metadata_summary(
         self,

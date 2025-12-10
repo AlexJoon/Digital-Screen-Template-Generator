@@ -10,6 +10,8 @@ from config import settings
 from services.openai_service import openai_service
 from services.exporters import ExportService, ExportFormat, SlideData
 from services.hive import hive_service
+from services.image_utils import crop_image_to_face
+import base64
 
 
 class IframeMiddleware(BaseHTTPMiddleware):
@@ -88,6 +90,73 @@ async def health_check():
         "status": "healthy",
         "supported_formats": [f.value for f in export_service.supported_formats]
     }
+
+
+# ============================================================
+# AI Image Processing Endpoints
+# ============================================================
+
+class CropImageResponse(BaseModel):
+    """Response from image crop endpoint"""
+    success: bool
+    has_face: bool
+    cropped_image_base64: Optional[str] = None
+    crop_info: Optional[dict] = None
+    error: Optional[str] = None
+
+
+@app.post("/analyze-and-crop-image", response_model=CropImageResponse)
+async def analyze_and_crop_image(
+    image: UploadFile = File(...),
+    output_size: int = Query(default=800, description="Output image size in pixels")
+):
+    """
+    Analyze an uploaded image using GPT-4 Vision to detect face position,
+    then crop the image centered on the detected face.
+
+    Returns the cropped image as base64 for preview and later use.
+
+    If no face is detected, returns a center-cropped square image.
+    """
+    try:
+        image_data = await image.read()
+        image_type = image.content_type or "image/jpeg"
+
+        # Step 1: Use GPT-4 Vision to detect face position
+        print(f"Detecting face in uploaded image: {image.filename}")
+        face_detection = await openai_service.detect_face_position(
+            image_data,
+            image_type
+        )
+        print(f"Face detection result: {face_detection}")
+
+        # Step 2: Crop image based on face detection
+        cropped_image, crop_info = crop_image_to_face(
+            image_data,
+            face_detection,
+            output_size=output_size
+        )
+
+        # Convert to base64 for frontend
+        cropped_base64 = base64.b64encode(cropped_image).decode('utf-8')
+
+        return CropImageResponse(
+            success=True,
+            has_face=face_detection.get("has_face", False),
+            cropped_image_base64=cropped_base64,
+            crop_info={
+                **crop_info,
+                "face_detection": face_detection
+            }
+        )
+
+    except Exception as e:
+        print(f"Error in analyze_and_crop_image: {str(e)}")
+        return CropImageResponse(
+            success=False,
+            has_face=False,
+            error=str(e)
+        )
 
 
 # Store for processed metadata (in production, use Redis or similar)
@@ -287,19 +356,6 @@ async def export_slide_with_image(
             status_code=500,
             detail=f"Error exporting slide: {str(e)}"
         )
-
-
-# Legacy endpoint compatibility - redirects to new export
-@app.post("/generate-presentation")
-async def generate_presentation_legacy(
-    request: ExportRequest,
-    format: ExportFormatEnum = Query(default=ExportFormatEnum.pptx)
-):
-    """
-    Legacy endpoint for backwards compatibility.
-    Redirects to the new /export endpoint.
-    """
-    return await export_slide(request, format)
 
 
 # ============================================================
