@@ -2,14 +2,35 @@ from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Query, Reque
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from starlette.middleware.base import BaseHTTPMiddleware
+from contextlib import asynccontextmanager
 from pydantic import BaseModel
 from typing import Optional
 from enum import Enum
+import logging
+import sys
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
+logger = logging.getLogger(__name__)
+
+logger.info("Starting application import...")
 
 from config import settings
+logger.info(f"Config loaded. CORS origins: {settings.cors_origins_list}")
+
 from services.openai_service import openai_service
+logger.info("OpenAI service loaded")
+
 from services.exporters import ExportService, ExportFormat, SlideData
+logger.info("Export service loaded")
+
 from services.image_utils import crop_image_to_face
+logger.info("Image utils loaded")
+
 import base64
 
 
@@ -28,10 +49,24 @@ class IframeMiddleware(BaseHTTPMiddleware):
         return response
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    logger.info("=" * 50)
+    logger.info("APPLICATION STARTUP")
+    logger.info(f"CORS origins configured: {settings.cors_origins_list}")
+    logger.info(f"OpenAI API key present: {bool(settings.openai_api_key)}")
+    logger.info("=" * 50)
+    yield
+    # Shutdown
+    logger.info("APPLICATION SHUTDOWN")
+
+
 app = FastAPI(
     title="Digitally Optimized Upload Generator",
     description="Generate branded digital screen slides in multiple formats",
-    version="2.0.0"
+    version="2.0.0",
+    lifespan=lifespan
 )
 
 # Configure CORS
@@ -85,6 +120,7 @@ async def root():
 
 @app.get("/health")
 async def health_check():
+    logger.info("Health check endpoint called")
     return {
         "status": "healthy",
         "supported_formats": [f.value for f in export_service.supported_formats]
