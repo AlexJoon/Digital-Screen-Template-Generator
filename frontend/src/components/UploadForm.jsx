@@ -11,7 +11,10 @@ function UploadForm({ onSubmit, apiBaseUrl = 'http://localhost:8000' }) {
     authorName: '',
     image: null,
     publicationLink: '',
-    slideCategory: 'research_spotlight'
+    slideCategory: 'research_spotlight',
+    eventDate: '',
+    eventTime: '',
+    eventLocation: ''
   })
 
   const handleSubmit = (e) => {
@@ -75,6 +78,7 @@ function UploadForm({ onSubmit, apiBaseUrl = 'http://localhost:8000' }) {
             >
               <option value="research_spotlight">Research Spotlight</option>
               <option value="student_screens">Student Screens</option>
+              <option value="events">Events</option>
             </select>
             {/* Plus/Minus icon */}
             <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none">
@@ -199,33 +203,137 @@ function UploadForm({ onSubmit, apiBaseUrl = 'http://localhost:8000' }) {
             />
           </>
         )}
+
+        {metadata.slideCategory === 'events' && (
+          <>
+            {/* Headline - Full Width */}
+            <FormInput
+              label="Headline"
+              value={metadata.headline}
+              onChange={(value) => updateMetadata('headline', value)}
+              placeholder="AI+ Series: The future of Healthcare"
+              required={true}
+              maxLength={80}
+              helpText="Event title (appears as main header)"
+            />
+
+            {/* Description - Full Width */}
+            <FormInput
+              label="Description"
+              value={metadata.description}
+              onChange={(value) => updateMetadata('description', value)}
+              placeholder="Join us for a discussion on AI and Healthcare where we will..."
+              required={true}
+              maxLength={300}
+              rows={1}
+              type="textarea"
+              helpText="Brief event details (main body text)"
+            />
+
+            {/* Date, Time, Location - 3 Column Grid */}
+            <div className="grid grid-cols-3 gap-4">
+              <FormInput
+                label="Date"
+                value={metadata.eventDate}
+                onChange={(value) => updateMetadata('eventDate', value)}
+                placeholder="February 24, 2025"
+                required={true}
+                maxLength={40}
+                helpText="Event date"
+              />
+
+              <FormInput
+                label="Time"
+                value={metadata.eventTime}
+                onChange={(value) => updateMetadata('eventTime', value)}
+                placeholder="6:00 PM"
+                required={true}
+                maxLength={10}
+                helpText="Event time"
+              />
+
+              <FormInput
+                label="Location"
+                value={metadata.eventLocation}
+                onChange={(value) => updateMetadata('eventLocation', value)}
+                placeholder="Cooperman Commons"
+                required={true}
+                maxLength={40}
+                helpText="Event venue"
+              />
+            </div>
+
+            {/* Image - Full Width */}
+            <FileUploadInput
+              label="Image"
+              value={metadata.image}
+              onChange={(value) => updateMetadata('image', value)}
+              accept="image/*"
+              helpText="Speaker or event visual (optional, AI centers image on slide)"
+              enableAICrop={true}
+              apiBaseUrl={apiBaseUrl}
+            />
+
+            {/* Caption and Publication Link - 50/50 Grid */}
+            <div className="grid grid-cols-2 gap-4">
+              <FormInput
+                label="Caption"
+                value={metadata.caption}
+                onChange={(value) => updateMetadata('caption', value)}
+                placeholder="Columbia Business School, Manhattanville campus"
+                maxLength={80}
+                helpText="Image caption or credit (optional)"
+              />
+
+              <FormInput
+                label="Publication Link"
+                value={metadata.publicationLink}
+                onChange={(value) => updateMetadata('publicationLink', value)}
+                placeholder="https://example.com/event"
+                type="url"
+                helpText="Link to event page (optional)"
+              />
+            </div>
+          </>
+        )}
       </div>
 
       {/* Submit Button */}
       <div className="flex justify-center">
-        <button
-          type="submit"
-          disabled={!metadata.headline || !metadata.description || !metadata.image}
-          className={`py-3 px-6 font-medium transition-all duration-200 flex items-center gap-2 ${
-            metadata.headline && metadata.description && metadata.image
-              ? 'text-white'
-              : 'bg-[#f1f4f7] text-gray-500 cursor-not-allowed'
-          }`}
-          style={{backgroundColor: (metadata.headline && metadata.description && metadata.image) ? '#181a1c' : '#f1f4f7'}}
-        >
-          <span>Prep Screen Content</span>
-        <svg
-          className="w-5 h-5"
-          fill="none"
-          stroke={(metadata.headline && metadata.description && metadata.image) ? '#009bdb' : '#ccc'}
-          viewBox="0 0 24 24"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M5 12h14M12 5l7 7-7 7" />
-        </svg>
-      </button>
+        {(() => {
+          const isEventsValid = metadata.slideCategory === 'events' &&
+            metadata.headline && metadata.description &&
+            metadata.eventDate && metadata.eventTime && metadata.eventLocation;
+          const isOtherValid = metadata.slideCategory !== 'events' &&
+            metadata.headline && metadata.description && metadata.image;
+          const isFormValid = isEventsValid || isOtherValid;
+
+          return (
+            <button
+              type="submit"
+              disabled={!isFormValid}
+              className={`py-3 px-6 font-medium transition-all duration-200 flex items-center gap-2 ${
+                isFormValid
+                  ? 'text-white'
+                  : 'bg-[#f1f4f7] text-gray-500 cursor-not-allowed'
+              }`}
+              style={{backgroundColor: isFormValid ? '#181a1c' : '#f1f4f7'}}
+            >
+              <span>Prep Screen Content</span>
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke={isFormValid ? '#009bdb' : '#ccc'}
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </button>
+          );
+        })()}
       </div>
     </form>
   )

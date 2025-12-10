@@ -287,6 +287,25 @@ class BaseImageExporter(BaseExporter):
             max_lines=5
         )
 
+        # Event details (date, time, location) if present
+        if slide_data.event_date or slide_data.event_time or slide_data.event_location:
+            event_font = self._get_font(28, bold=True)
+            event_top = headline_top + int(4.0 * scale_y)
+            event_parts = []
+            if slide_data.event_date:
+                event_parts.append(f"📅 {slide_data.event_date}")
+            if slide_data.event_time:
+                event_parts.append(f"🕐 {slide_data.event_time}")
+            if slide_data.event_location:
+                event_parts.append(f"📍 {slide_data.event_location}")
+            event_text = "   |   ".join(event_parts)
+            draw.text(
+                (left_margin, event_top),
+                event_text,
+                font=event_font,
+                fill=accent_color
+            )
+
         # Author name (accent color)
         if slide_data.author_name:
             author_font = self._get_font(32, bold=True)

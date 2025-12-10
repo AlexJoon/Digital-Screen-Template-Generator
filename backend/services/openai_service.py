@@ -130,7 +130,10 @@ Return ONLY the JSON object, no other text."""
         description: Optional[str] = None,
         author_name: Optional[str] = None,
         publication_link: Optional[str] = None,
-        image_description: Optional[str] = None
+        image_description: Optional[str] = None,
+        event_date: Optional[str] = None,
+        event_time: Optional[str] = None,
+        event_location: Optional[str] = None
     ) -> str:
         """
         Format metadata into a human-readable summary.
@@ -153,6 +156,23 @@ Return ONLY the JSON object, no other text."""
 
         if description:
             parts.append(f"\n\nThe description reads as: \"{description.strip()}\"")
+
+        # Event-specific fields - conversational format
+        if event_date or event_time or event_location:
+            if event_date and event_time and event_location:
+                parts.append(f"\n\nThis event is scheduled for {event_date} at {event_time}, and will take place at {event_location}.")
+            elif event_date and event_time:
+                parts.append(f"\n\nThis event is scheduled for {event_date} at {event_time}.")
+            elif event_date and event_location:
+                parts.append(f"\n\nThis event is scheduled for {event_date} at {event_location}.")
+            elif event_time and event_location:
+                parts.append(f"\n\nThis event will take place at {event_time} at {event_location}.")
+            elif event_date:
+                parts.append(f"\n\nThis event is scheduled for {event_date}.")
+            elif event_time:
+                parts.append(f"\n\nThis event is scheduled at {event_time}.")
+            elif event_location:
+                parts.append(f"\n\nThis event will take place at {event_location}.")
 
         if author_name:
             parts.append(f"\n\nThe author/researcher to spotlight will be: {author_name}")

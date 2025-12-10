@@ -31,10 +31,10 @@ fi
 
 source venv/bin/activate
 echo "Installing backend dependencies..."
-pip install -q -r requirements.txt
+pip3 install -q -r requirements.txt
 
 echo "Starting FastAPI server on http://localhost:8000"
-python main.py &
+python3 main.py &
 BACKEND_PID=$!
 cd ..
 

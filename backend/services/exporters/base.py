@@ -58,6 +58,10 @@ class SlideData:
     image_data: Optional[bytes] = None
     image_description: Optional[str] = None
     template_id: str = "template1"
+    # Event-specific fields
+    event_date: Optional[str] = None
+    event_time: Optional[str] = None
+    event_location: Optional[str] = None
 
     @property
     def template(self) -> TemplateConfig:

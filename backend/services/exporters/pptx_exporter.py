@@ -197,6 +197,30 @@ class PPTXExporter(BaseExporter):
             bold=False
         )
 
+        # Add event details (date, time, location) if present
+        event_details_top = headline_top + 4.0
+        if slide_data.event_date or slide_data.event_time or slide_data.event_location:
+            event_parts = []
+            if slide_data.event_date:
+                event_parts.append(f"📅 {slide_data.event_date}")
+            if slide_data.event_time:
+                event_parts.append(f"🕐 {slide_data.event_time}")
+            if slide_data.event_location:
+                event_parts.append(f"📍 {slide_data.event_location}")
+
+            event_text = "   |   ".join(event_parts)
+            self._add_text_box(
+                slide,
+                event_text,
+                left=left_margin,
+                top=event_details_top,
+                width=content_width,
+                height=0.5,
+                font_size=14,
+                font_color=template.accent_color,
+                bold=True
+            )
+
         # Add author name (accent color)
         if slide_data.author_name:
             self._add_text_box(
