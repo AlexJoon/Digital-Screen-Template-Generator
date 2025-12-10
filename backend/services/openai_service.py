@@ -1,4 +1,4 @@
-from openai import OpenAI
+from openai import AsyncOpenAI
 from config import settings
 from typing import Optional, Dict, Any
 import base64
@@ -8,7 +8,7 @@ import re
 
 class OpenAIService:
     def __init__(self):
-        self.client = OpenAI(api_key=settings.openai_api_key)
+        self.client = AsyncOpenAI(api_key=settings.openai_api_key)
 
     async def analyze_image(self, image_data: bytes, image_type: str = "image/jpeg") -> str:
         """
@@ -25,7 +25,7 @@ class OpenAIService:
             # Encode image to base64
             base64_image = base64.b64encode(image_data).decode('utf-8')
 
-            response = self.client.chat.completions.create(
+            response = await self.client.chat.completions.create(
                 model="gpt-4o",
                 messages=[
                     {
@@ -72,7 +72,7 @@ class OpenAIService:
         try:
             base64_image = base64.b64encode(image_data).decode('utf-8')
 
-            response = self.client.chat.completions.create(
+            response = await self.client.chat.completions.create(
                 model="gpt-4o",
                 messages=[
                     {
