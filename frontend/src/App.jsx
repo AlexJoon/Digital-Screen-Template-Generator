@@ -294,9 +294,37 @@ function App() {
   }
 
   const formatOptions = [
-    { value: 'pptx', label: 'PowerPoint (.pptx)', description: 'Editable presentation file' },
-    { value: 'png', label: 'PNG Image (.png)', description: 'High quality image' },
-    { value: 'jpg', label: 'JPEG Image (.jpg)', description: 'Compressed image for web' },
+    {
+      value: 'pptx',
+      label: 'PowerPoint (.pptx)',
+      description: 'Editable presentation file',
+      icon: (
+        <svg className="w-6 h-6 text-[#009bdb]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5M9 11.25v1.5M12 9v3.75m3-6v6" />
+        </svg>
+      )
+    },
+    {
+      value: 'png',
+      label: 'PNG Image (.png)',
+      description: 'High quality image',
+      icon: (
+        <svg className="w-6 h-6 text-[#009bdb]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+        </svg>
+      )
+    },
+    {
+      value: 'jpg',
+      label: 'JPEG Image (.jpg)',
+      description: 'Compressed image for web',
+      icon: (
+        <svg className="w-6 h-6 text-[#009bdb]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+        </svg>
+      )
+    },
   ]
 
   return (
@@ -378,7 +406,7 @@ function App() {
 
           {/* Main Content */}
           {status === 'idle' && (
-            <UploadForm onSubmit={handleFormSubmit} />
+            <UploadForm onSubmit={handleFormSubmit} apiBaseUrl={API_BASE_URL} />
           )}
 
           {(status === 'processing' || status === 'generating') && (
@@ -463,18 +491,28 @@ function App() {
               <div className="p-4 border-2 border-gray-200 space-y-6">
                 {/* Template Selection */}
                 <div className="w-[65%] mx-auto">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Select Brand Template
-                  </label>
-                  <select
-                    value={selectedTemplate}
-                    onChange={(e) => setSelectedTemplate(e.target.value)}
-                    className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 text-gray-900"
-                  >
-                    <option value="template1">Template 1 - Default CBS Blue</option>
-                    <option value="template2">Template 2 - Dark Theme</option>
-                    <option value="template3">Template 3 - Light Theme</option>
-                  </select>
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Select Brand Template
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={selectedTemplate}
+                        onChange={(e) => setSelectedTemplate(e.target.value)}
+                        className="w-full px-0 py-2 pr-8 border-0 border-b-2 border-gray-500 hover:border-[#181a1c] focus:border-[#009bdb] focus:hover:border-[#009bdb] focus:outline-none focus:ring-0 bg-transparent text-gray-900 appearance-none cursor-pointer transition-all duration-300 ease-in-out [&>option]:bg-[#181a1c] [&>option]:text-[#009bdb] [&>option]:py-2"
+                      >
+                        <option value="template1">Template 1 - Default CBS Blue</option>
+                        <option value="template2">Template 2 - Dark Theme</option>
+                        <option value="template3">Template 3 - Light Theme</option>
+                      </select>
+                      {/* Plus icon */}
+                      <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none">
+                        <svg className="w-4 h-4 text-[#009bdb]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Preview Component */}
@@ -496,19 +534,26 @@ function App() {
                         onClick={() => setSelectedFormat(option.value)}
                         className={`p-3 border-2 text-left transition-all ${
                           selectedFormat === option.value
-                            ? 'border-blue-500 bg-blue-50'
+                            ? 'border-[#009bdb] bg-blue-50'
                             : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
-                        <div className="font-medium text-gray-900 text-sm">{option.label}</div>
-                        <div className="text-xs text-gray-500 mt-1">{option.description}</div>
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <div className="font-medium text-gray-900 text-sm">{option.label}</div>
+                            <div className="text-xs text-gray-500 mt-1">{option.description}</div>
+                          </div>
+                          <div className="flex-shrink-0">
+                            {option.icon}
+                          </div>
+                        </div>
                       </button>
                     ))}
                   </div>
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <button
                   onClick={() => handleExport(selectedFormat)}
                   className="max-w-fit text-white font-medium py-3 px-6 transition-colors duration-200 flex items-center gap-2"

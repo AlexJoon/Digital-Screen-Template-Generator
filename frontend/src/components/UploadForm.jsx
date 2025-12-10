@@ -2,7 +2,7 @@ import { useState } from 'react'
 import FormInput from './FormInput'
 import FileUploadInput from './FileUploadInput'
 
-function UploadForm({ onSubmit }) {
+function UploadForm({ onSubmit, apiBaseUrl = 'http://localhost:8000' }) {
   // Metadata fields
   const [metadata, setMetadata] = useState({
     headline: '',
@@ -62,19 +62,28 @@ function UploadForm({ onSubmit }) {
 
       {/* Digital Screen Category Selector */}
       <div className="w-[65%] mx-auto">
-        <div className="space-y-2">
+        <div className="space-y-1">
           <label className="block text-sm font-medium text-gray-700">
             Digital Screen Category <span className="text-red-500">*</span>
           </label>
-          <select
-            value={metadata.slideCategory}
-            onChange={(e) => updateMetadata('slideCategory', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
-          >
-            <option value="research_spotlight">Research Spotlight</option>
-            <option value="student_screens">Student Screens</option>
-          </select>
-          <p className="text-xs text-gray-500">Select the type of digital screen slide</p>
+          <p className="text-xs text-gray-500 mb-1">Select the type of digital screen slide</p>
+          <div className="relative">
+            <select
+              value={metadata.slideCategory}
+              onChange={(e) => updateMetadata('slideCategory', e.target.value)}
+              className="w-full px-0 py-2 pr-8 border-0 border-b-2 border-gray-500 hover:border-[#181a1c] focus:border-[#009bdb] focus:hover:border-[#009bdb] focus:outline-none focus:ring-0 bg-transparent text-gray-900 appearance-none cursor-pointer transition-all duration-300 ease-in-out [&>option]:bg-[#181a1c] [&>option]:text-[#009bdb] [&>option]:py-2"
+            >
+              <option value="research_spotlight">Research Spotlight</option>
+              <option value="student_screens">Student Screens</option>
+            </select>
+            {/* Plus/Minus icon */}
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none">
+              <svg className="w-4 h-4 text-[#009bdb]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+            </div>
+          </div>
+          <span className="text-xs text-gray-400">* Required</span>
         </div>
       </div>
 
@@ -114,7 +123,7 @@ function UploadForm({ onSubmit }) {
               placeholder="Research from Columbia Business School reveals how team diversity improves workplace ethics..."
               required={true}
               maxLength={300}
-              rows={3}
+              rows={1}
               type="textarea"
               helpText="Summary or blurb about the content"
             />
@@ -147,7 +156,9 @@ function UploadForm({ onSubmit }) {
               onChange={(value) => updateMetadata('image', value)}
               required={true}
               accept="image/*"
-              helpText="Upload faculty image"
+              helpText="Upload faculty image (AI will auto-center on face with Vision)"
+              enableAICrop={true}
+              apiBaseUrl={apiBaseUrl}
             />
           </>
         )}
@@ -171,7 +182,7 @@ function UploadForm({ onSubmit }) {
               placeholder="Details about the student achievement..."
               required={true}
               maxLength={300}
-              rows={3}
+              rows={1}
               type="textarea"
               helpText="Description of the content"
             />
@@ -182,7 +193,9 @@ function UploadForm({ onSubmit }) {
               onChange={(value) => updateMetadata('image', value)}
               required={true}
               accept="image/*"
-              helpText="Supporting image"
+              helpText="Supporting image (AI will auto-center on face with Vision)"
+              enableAICrop={true}
+              apiBaseUrl={apiBaseUrl}
             />
           </>
         )}
