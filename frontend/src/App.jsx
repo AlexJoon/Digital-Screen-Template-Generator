@@ -337,7 +337,7 @@ function App() {
                     <path strokeLinecap="round" strokeWidth="2" d="M12 16v-4M12 8h.01" />
                   </svg>
                   <div className="absolute left-0 top-full mt-2 hidden group-hover:block w-80 p-3 bg-gray-900 text-white text-xs z-10">
-                    Doug uses OpenAI for image analysis and generates slides locally - instant exports with no external dependencies!
+                    Doug utilizes OpenAI for image analysis, processing slide metadata and digital screen generation - all in one tool.
                     <div className="absolute bottom-full left-4 -mb-1 border-4 border-transparent border-b-gray-900"></div>
                   </div>
                 </div>
