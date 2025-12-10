@@ -38,7 +38,8 @@ This document describes the architecture of the CBS Digital Screen Generator ("D
 │  │              (FastAPI Application)                    │   │
 │  │                                                       │   │
 │  │  Endpoints:                                          │   │
-│  │  - POST /upload-metadata                             │   │
+│  │  - POST /process-metadata                            │   │
+│  │  - POST /analyze-and-crop-image                      │   │
 │  │  - POST /export (PNG/JPG/PPTX)                       │   │
 │  │  - POST /submit-to-hive                              │   │
 │  │  - GET  /health                                       │   │
@@ -77,7 +78,7 @@ This document describes the architecture of the CBS Digital Screen Generator ("D
 ```
 User → UploadForm → App.jsx → FormData → Backend API
                                               ↓
-                                    /upload-metadata
+                                    /process-metadata
                                               ↓
                                     Validate metadata
                                               ↓
@@ -136,7 +137,32 @@ User clicks "Submit to Hive" → App.jsx → Backend API
                                     link to Hive
 ```
 
-### 4. QR Code Generation
+### 4. AI-Powered Face-Centered Image Cropping
+
+```
+User uploads image → FileUploadInput component
+                              ↓
+                    POST /analyze-and-crop-image
+                              ↓
+                    GPT-4o Vision analyzes image:
+                    ├─ Detects face presence
+                    ├─ Returns face_center_x (0-1)
+                    ├─ Returns face_center_y (0-1)
+                    └─ Returns face_size (0-1)
+                              ↓
+                    crop_image_to_face() in image_utils.py:
+                    ├─ If face detected: center crop on face
+                    │   with headshot-optimized framing
+                    └─ If no face: center crop to square
+                              ↓
+                    Return base64 cropped image + crop info
+                              ↓
+                    Frontend shows preview with toggle:
+                    ├─ "Use AI-cropped version" (default)
+                    └─ "Use original instead"
+```
+
+### 5. QR Code Generation
 
 ```
 Publication Link (user input)
@@ -202,9 +228,9 @@ main.py (FastAPI App - Python)
 ├── CORS Middleware
 ├── Session storage (_metadata_store)
 ├── API Endpoints
-│   ├── POST /upload-metadata
+│   ├── POST /process-metadata
+│   ├── POST /analyze-and-crop-image  # AI face detection + cropping
 │   ├── POST /export
-│   ├── POST /generate (legacy)
 │   ├── POST /submit-to-hive
 │   ├── GET /hive/projects
 │   └── GET /health
@@ -212,9 +238,12 @@ main.py (FastAPI App - Python)
 services/ (Python modules)
 ├── openai_service.py          # OpenAI SDK integration
 │   └── OpenAIService
-│       ├── synthesize_text(): Format document text
 │       ├── analyze_image(): GPT-4o Vision analysis
+│       ├── detect_face_position(): Face detection for smart cropping
 │       └── format_metadata_summary(): Human-readable summary
+│
+├── image_utils.py             # Image processing utilities
+│   └── crop_image_to_face(): AI-powered face-centered cropping
 │
 ├── exporters/                 # Slide generation (Pillow + python-pptx)
 │   ├── base.py
@@ -341,7 +370,36 @@ TEMPLATES = {
 
 ### Internal API Endpoints
 
-**POST /upload-metadata**
+**POST /analyze-and-crop-image**
+```json
+Request (multipart/form-data):
+{
+  "image": "file (required)"
+}
+
+Query: ?output_size=800
+
+Response:
+{
+  "success": true,
+  "has_face": true,
+  "cropped_image_base64": "base64-encoded-jpeg...",
+  "crop_info": {
+    "original_width": 1200,
+    "original_height": 800,
+    "was_cropped": true,
+    "crop_method": "face_centered",
+    "face_detection": {
+      "has_face": true,
+      "face_center_x": 0.45,
+      "face_center_y": 0.35,
+      "face_size": 0.25
+    }
+  }
+}
+```
+
+**POST /process-metadata**
 ```json
 Request (multipart/form-data):
 {
@@ -351,7 +409,7 @@ Request (multipart/form-data):
   "description": "string",
   "author_name": "string (optional)",
   "publication_link": "string (optional)",
-  "image": "file (optional)"
+  "image": "file (required)"
 }
 
 Response:
@@ -552,6 +610,40 @@ frontend/
 | `VITE_API_BASE_URL` | Yes | Backend API URL |
 
 For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
+
+## UI/UX Design System
+
+### CBS Brand Colors
+
+| Color | Hex | Usage |
+|-------|-----|-------|
+| CBS Cyan | `#009bdb` | Accent color, active states, icons |
+| CBS Dark | `#181a1c` | Primary buttons, dark backgrounds |
+| Gray 500 | `gray-500` | Form borders, inactive elements |
+| Blue 50 | `bg-blue-50` | Section backgrounds |
+
+### Form Styling
+
+Form inputs follow a consistent underline-only design pattern:
+- **Border**: `border-b-2 border-gray-500` (underline only)
+- **Hover**: `hover:border-[#181a1c]`
+- **Focus**: `focus:border-[#009bdb]`
+- **Transition**: `transition-all duration-300 ease-in-out`
+- **Dot Indicator**: Small cyan dot appears when field has value or is focused
+
+### Export Format Buttons
+
+Each format option displays:
+- File type icon (cyan, right-aligned)
+- Format label and description (left-aligned)
+- Selected state: `border-[#009bdb] bg-blue-50`
+
+### Step Timeline
+
+Three-step visual progress indicator:
+1. **Enter Info** - Form input step
+2. **Select Template** - Template and format selection
+3. **Export** - Download and Hive submission
 
 ## Future Enhancements
 

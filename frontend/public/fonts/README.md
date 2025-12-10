@@ -34,7 +34,7 @@ Neue Haas Grotesk Display Pro is a commercial font. You can obtain it from:
 
 - `.woff2` - Modern browsers (recommended, smallest file size)
 - `.woff` - Fallback for older browsers
-- `.ttf` - Legacy support
+- `.ttf` - Broader compatibility
 
 ## Once You Have the Files
 

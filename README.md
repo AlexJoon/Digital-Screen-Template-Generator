@@ -5,14 +5,16 @@ A streamlined tool for Columbia Business School staff to create professional dig
 ## Features
 
 - **Direct Content Entry**: Enter headline, description, caption, and author information directly
-- **Image Upload**: Upload faculty/speaker images with automatic circular cropping
+- **AI-Powered Face Cropping**: GPT-4o Vision detects faces and automatically centers crops for optimal headshot framing
+- **Image Upload**: Upload faculty/speaker images with smart cropping preview and original/cropped toggle
 - **QR Code Generation**: Automatically generate QR codes from publication links
-- **Multiple Export Formats**: Download as PowerPoint (.pptx), PNG, or JPG
+- **Multiple Export Formats**: Download as PowerPoint (.pptx), PNG, or JPG with file-type icons
 - **Template Selection**: Choose from CBS Blue, Dark, or Light themes
-- **Live Preview**: See your slide in real-time as you build it
+- **Live Preview**: See your slide in real-time as you build it with fullscreen lightbox view
 - **Hive Integration**: Submit slides directly to MarComms Service Requests in Hive
 - **AI Image Analysis**: GPT-4o Vision analyzes uploaded images for context
 - **Local Generation**: All slide rendering happens locally for instant exports
+- **CBS Brand Styling**: Consistent underline form inputs, cyan accents, and step timeline
 
 ## Tech Stack
 
@@ -40,6 +42,7 @@ digitally-optimized-upload-generator/
 ├── backend/
 │   ├── services/
 │   │   ├── openai_service.py      # OpenAI GPT-4o Vision integration
+│   │   ├── image_utils.py         # AI face-centered cropping
 │   │   ├── exporters/             # Slide generation
 │   │   │   ├── base.py            # Base classes and templates
 │   │   │   ├── export_service.py  # Export orchestration
@@ -173,7 +176,22 @@ For convenience, run both servers at once:
 
 ### API Endpoints
 
-#### POST `/upload-metadata`
+#### POST `/analyze-and-crop-image`
+Analyze image with GPT-4o Vision for face detection and return an optimally cropped version.
+
+**Parameters (multipart/form-data):**
+- `image`: Image file (required)
+
+**Query:**
+- `output_size`: Output image size in pixels (default: 800)
+
+**Response:**
+- `success`: Boolean indicating success
+- `has_face`: Whether a face was detected
+- `cropped_image_base64`: Base64-encoded cropped JPEG
+- `crop_info`: Details about the crop operation
+
+#### POST `/process-metadata`
 Submit slide content and get a summary.
 
 **Parameters (multipart/form-data):**
@@ -183,7 +201,7 @@ Submit slide content and get a summary.
 - `caption`: Small caption text
 - `author_name`: Author to highlight
 - `publication_link`: URL for QR code
-- `image`: Image file (JPEG, PNG, GIF, WebP)
+- `image`: Image file (JPEG, PNG, GIF, WebP) - required
 
 #### POST `/export`
 Generate and download a slide.
