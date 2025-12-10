@@ -1,17 +1,19 @@
 # Digitally Optimized Upload Generator ("Doug")
 
-A streamlined tool for Columbia Business School staff to create professional digital screen slides. Enter your content directly and generate ready-to-display slides in multiple formats (PowerPoint, PNG, JPG) with optional Hive integration for MarComms workflow.
+A streamlined tool for Columbia Business School staff to create professional digital screen slides. Enter your content directly and generate ready-to-display slides in multiple formats (PowerPoint, PNG, JPG).
 
 ## Features
 
 - **Direct Content Entry**: Enter headline, description, caption, and author information directly
+- **Three Slide Categories**: Research Spotlight, Student Screens, and Events with category-specific fields
+- **Events Support**: Dedicated event slides with date, time, and location fields
 - **AI-Powered Face Cropping**: GPT-4o Vision detects faces and automatically centers crops for optimal headshot framing
 - **Image Upload**: Upload faculty/speaker images with smart cropping preview and original/cropped toggle
 - **QR Code Generation**: Automatically generate QR codes from publication links
 - **Multiple Export Formats**: Download as PowerPoint (.pptx), PNG, or JPG with file-type icons
 - **Template Selection**: Choose from CBS Blue, Dark, or Light themes
 - **Live Preview**: See your slide in real-time as you build it with fullscreen lightbox view
-- **Hive Integration**: Submit slides directly to MarComms Service Requests in Hive
+- **Hive Redirect**: Quick link to submit slides to MarComms via Hive form
 - **AI Image Analysis**: GPT-4o Vision analyzes uploaded images for context
 - **Local Generation**: All slide rendering happens locally for instant exports
 - **CBS Brand Styling**: Consistent underline form inputs, cyan accents, and step timeline
@@ -25,7 +27,6 @@ A streamlined tool for Columbia Business School staff to create professional dig
 - **NumPy**: Fast gradient rendering
 - **qrcode**: QR code generation
 - **OpenAI SDK**: GPT-4o Vision for image analysis
-- **httpx**: Async HTTP client for Hive API
 - **Pydantic**: Data validation and settings management
 
 ### Frontend
@@ -48,9 +49,6 @@ digitally-optimized-upload-generator/
 │   │   │   ├── export_service.py  # Export orchestration
 │   │   │   ├── image_exporter.py  # PNG/JPG export (Pillow)
 │   │   │   └── pptx_exporter.py   # PowerPoint export
-│   │   └── hive/                  # Hive API integration
-│   │       ├── hive_client.py     # API client
-│   │       └── hive_service.py    # Service layer
 │   ├── config.py                  # Configuration management
 │   ├── main.py                    # FastAPI application
 │   ├── requirements.txt           # Python dependencies
@@ -116,12 +114,6 @@ cp .env.example .env
 ```
 OPENAI_API_KEY=your_openai_api_key_here
 CORS_ORIGINS=http://localhost:5173,http://localhost:3000
-
-# Optional: Hive API settings for MarComms integration
-HIVE_API_KEY=your_hive_api_key
-HIVE_USER_ID=your_hive_user_id
-HIVE_WORKSPACE_ID=your_hive_workspace_id
-HIVE_DEFAULT_PROJECT_ID=your_hive_project_id
 ```
 
 6. Run the backend server:
@@ -161,18 +153,22 @@ For convenience, run both servers at once:
 
 ### Creating a Slide
 
-1. **Select Category**: Choose your slide type (Research, Event, Faculty, etc.)
+1. **Select Category**: Choose your slide type:
+   - **Research Spotlight**: For faculty research highlights (requires image)
+   - **Student Screens**: For student-related content (requires image)
+   - **Events**: For event announcements with date, time, and location
 2. **Enter Content**:
    - **Headline**: Main title for the slide
    - **Caption** (optional): Small text above the headline
    - **Description**: Body text for the slide
    - **Author Name** (optional): Name to highlight in accent color
    - **Publication Link** (optional): URL for QR code generation
-3. **Upload Image** (optional): Faculty photo or relevant image
+   - **Event Fields** (Events category only): Date, Time, Location
+3. **Upload Image**: Faculty photo or relevant image (optional for Events)
 4. **Review**: Check the AI-generated summary
 5. **Select Template**: Choose CBS Blue, Dark, or Light theme
 6. **Export**: Download as PowerPoint, PNG, or JPG
-7. **Submit to Hive** (optional): Send directly to MarComms
+7. **Submit to Hive** (optional): Opens Hive form to submit to MarComms
 
 ### API Endpoints
 
@@ -201,7 +197,10 @@ Submit slide content and get a summary.
 - `caption`: Small caption text
 - `author_name`: Author to highlight
 - `publication_link`: URL for QR code
-- `image`: Image file (JPEG, PNG, GIF, WebP) - required
+- `image`: Image file (JPEG, PNG, GIF, WebP)
+- `event_date`: Event date (for Events category)
+- `event_time`: Event time (for Events category)
+- `event_location`: Event location (for Events category)
 
 #### POST `/export`
 Generate and download a slide.
@@ -214,12 +213,12 @@ Generate and download a slide.
   "headline": "Your Headline",
   "description": "Your description text",
   "template_id": "template1",
-  "session_id": "uuid-from-upload"
+  "session_id": "uuid-from-upload",
+  "event_date": "February 24, 2025",
+  "event_time": "6:00 PM",
+  "event_location": "Cooperman Commons"
 }
 ```
-
-#### POST `/submit-to-hive`
-Submit slide to Hive MarComms project.
 
 #### GET `/health`
 Health check endpoint.

@@ -5,7 +5,7 @@ This document describes the architecture of the CBS Digital Screen Generator ("D
 - **Frontend**: React 18 + Vite + Tailwind CSS
 - **Backend**: Python 3.9+ with FastAPI
 - **Image Processing**: Pillow (PIL) + python-pptx
-- **External APIs**: OpenAI GPT-4o Vision, Hive API
+- **External APIs**: OpenAI GPT-4o Vision
 
 ## System Architecture
 
@@ -41,7 +41,6 @@ This document describes the architecture of the CBS Digital Screen Generator ("D
 │  │  - POST /process-metadata                            │   │
 │  │  - POST /analyze-and-crop-image                      │   │
 │  │  - POST /export (PNG/JPG/PPTX)                       │   │
-│  │  - POST /submit-to-hive                              │   │
 │  │  - GET  /health                                       │   │
 │  └───────────────────┬──────────────┬───────────────────┘   │
 │                      │              │                        │
@@ -51,24 +50,16 @@ This document describes the architecture of the CBS Digital Screen Generator ("D
 │         │ - analyze_image   │  │ - PNG Exporter   │        │
 │         │ - format_metadata │  │ - JPG Exporter   │        │
 │         └───────────────────┘  │ - PPTX Exporter  │        │
-│                                └──────┬───────────┘        │
-│                                       │                     │
-│                              ┌────────▼───────────┐        │
-│                              │   Hive Service     │        │
-│                              │                    │        │
-│                              │ - submit_request   │        │
-│                              │ - attach_file      │        │
-│                              └────────────────────┘        │
+│                                └──────────────────┘        │
 └────────────────────────────────────────────────────────────┘
-                   │                     │
-                   │                     │
-       ┌───────────▼────────┐  ┌─────────▼──────────┐
-       │    OpenAI API      │  │     Hive API       │
-       │                    │  │                    │
-       │ - GPT-4o Vision    │  │ - Create Actions   │
-       │ - Image Analysis   │  │ - Attach Files     │
-       │                    │  │ - MarComms Project │
-       └────────────────────┘  └────────────────────┘
+                   │
+                   │
+       ┌───────────▼────────┐
+       │    OpenAI API      │
+       │                    │
+       │ - GPT-4o Vision    │
+       │ - Image Analysis   │
+       └────────────────────┘
 ```
 
 ## Data Flow
@@ -120,21 +111,8 @@ User selects template + format → App.jsx → Backend API
 ### 3. Hive Submission Flow
 
 ```
-User clicks "Submit to Hive" → App.jsx → Backend API
-                                              ↓
-                                       /submit-to-hive
-                                              ↓
-                                    Export slide as PNG
-                                              ↓
-                                    Create Hive action in
-                                    MarComms Service Requests
-                                              ↓
-                                    Attach PNG to action
-                                              ↓
-                                    Return action URL
-                                              ↓
-                                    Frontend shows success +
-                                    link to Hive
+User clicks "Submit to Hive" → Opens Hive form in new tab
+                               (https://forms.hive.com/?formId=...)
 ```
 
 ### 4. AI-Powered Face-Centered Image Cropping
@@ -189,15 +167,14 @@ App.jsx (Main Container)
 │   ├── uploadOptions: object | null
 │   ├── selectedTemplate: 'template1' | 'template2' | 'template3'
 │   ├── selectedFormat: 'pptx' | 'png' | 'jpg'
-│   ├── exportedFile: { url, filename, format } | null
-│   └── hiveSubmission: { submitting, success, actionUrl, error } | null
+│   └── exportedFile: { url, filename, format } | null
 │
 ├── Event Handlers
 │   ├── handleFormSubmit()
 │   ├── handleExport()
 │   ├── handleDownload()
 │   ├── handleReset()
-│   └── handleSubmitToHive()
+│   └── handleSubmitToHive()  # Opens Hive form URL
 │
 └── Child Components
     ├── UploadForm (when status === 'idle')
@@ -231,8 +208,6 @@ main.py (FastAPI App - Python)
 │   ├── POST /process-metadata
 │   ├── POST /analyze-and-crop-image  # AI face detection + cropping
 │   ├── POST /export
-│   ├── POST /submit-to-hive
-│   ├── GET /hive/projects
 │   └── GET /health
 │
 services/ (Python modules)
@@ -273,21 +248,6 @@ services/ (Python modules)
 │           ├── _add_circular_image()
 │           ├── _add_qr_code()
 │           └── export()
-│
-└── hive/                      # Hive API integration (httpx)
-    ├── hive_client.py
-    │   └── HiveClient
-    │       ├── create_action()
-    │       ├── attach_file()
-    │       └── get_projects()
-    │
-    └── hive_service.py
-        └── HiveService
-            └── submit_slide_request()
-
-models/ (Pydantic models)
-└── slide_metadata.py
-    └── SlideMetadata (Pydantic model for validation)
 ```
 
 ## Technology Stack
@@ -313,7 +273,6 @@ models/ (Pydantic models)
 | Pillow | 10.x | Image processing |
 | qrcode | 7.x | QR code generation |
 | numpy | 1.x | Fast gradient rendering |
-| httpx | 0.26.0 | Async HTTP client |
 | OpenAI | 1.10.0 | GPT-4o Vision API |
 
 ## Export System
@@ -356,8 +315,8 @@ TEMPLATES = {
 │ │                             │  │    └──────────┘      │  │
 │ │  Description text here...   │  │                      │  │
 │ │                             │  │    ┌──────────┐      │  │
-│ │                             │  │    │ QR Code  │      │  │
-│ │                             │  │    └──────────┘      │  │
+│ │  📅 Date | 🕐 Time | 📍 Loc │  │    │ QR Code  │      │  │
+│ │  (Events only, accent)      │  │    └──────────┘      │  │
 │ │                             │  │   Scan for more      │  │
 │ └─────────────────────────────┘  └──────────────────────┘  │
 │                                                              │
@@ -409,7 +368,10 @@ Request (multipart/form-data):
   "description": "string",
   "author_name": "string (optional)",
   "publication_link": "string (optional)",
-  "image": "file (required)"
+  "image": "file",
+  "event_date": "string (optional, for Events)",
+  "event_time": "string (optional, for Events)",
+  "event_location": "string (optional, for Events)"
 }
 
 Response:
@@ -430,35 +392,15 @@ Request:
   "author_name": "string (optional)",
   "publication_link": "string (optional)",
   "template_id": "template1",
-  "session_id": "uuid"
+  "session_id": "uuid",
+  "event_date": "string (optional)",
+  "event_time": "string (optional)",
+  "event_location": "string (optional)"
 }
 
 Query: ?format=pptx|png|jpg
 
 Response: Binary file with Content-Disposition header
-```
-
-**POST /submit-to-hive**
-```json
-Request:
-{
-  "headline": "string",
-  "description": "string",
-  "caption": "string (optional)",
-  "author_name": "string (optional)",
-  "publication_link": "string (optional)",
-  "template_id": "template1",
-  "session_id": "uuid",
-  "export_format": "png"
-}
-
-Response:
-{
-  "success": true,
-  "action_id": "hive-action-id",
-  "action_url": "https://hive.com/...",
-  "error": null
-}
 ```
 
 ### External API Integrations
@@ -475,15 +417,6 @@ messages = [{
 }]
 ```
 
-**Hive API**
-```
-Base URL: https://app.hive.com/api/v1
-
-POST /actions/create - Create action in project
-POST /actions/{id}/attach - Attach file to action
-GET /projects - List available projects
-```
-
 ## Configuration
 
 ### Environment Variables
@@ -492,12 +425,6 @@ GET /projects - List available projects
 ```bash
 OPENAI_API_KEY=sk-...
 CORS_ORIGINS=http://localhost:5173,http://localhost:3000
-
-# Hive API
-HIVE_API_KEY=...
-HIVE_USER_ID=...
-HIVE_WORKSPACE_ID=...
-HIVE_DEFAULT_PROJECT_ID=...  # MarComms Service Requests
 ```
 
 **Frontend (.env):**
@@ -510,7 +437,6 @@ VITE_API_BASE_URL=http://localhost:8000
 ### API Key Protection
 - All external API keys stored in backend .env
 - Never exposed to frontend
-- Hive credentials for MarComms submission only
 
 ### CORS Configuration
 - Restricted to configured origins
@@ -544,7 +470,7 @@ localhost:5173 (Frontend - Vite)
       ↓
 localhost:8000 (Backend - Uvicorn)
       ↓
-External APIs (OpenAI, Hive)
+External APIs (OpenAI)
 ```
 
 ### Production (Railway)
@@ -569,12 +495,10 @@ The application is deployed using Railway with two separate services:
 │                                         │                    │
 └─────────────────────────────────────────┼────────────────────┘
                                           │
-                    ┌─────────────────────┼─────────────────────┐
-                    │                     │                     │
-           ┌────────▼────────┐   ┌────────▼────────┐           │
-           │   OpenAI API    │   │    Hive API     │           │
-           │   (GPT-4o)      │   │  (MarComms)     │           │
-           └─────────────────┘   └─────────────────┘           │
+                                 ┌────────▼────────┐
+                                 │   OpenAI API    │
+                                 │   (GPT-4o)      │
+                                 └─────────────────┘
 ```
 
 ### Deployment Files
@@ -599,10 +523,6 @@ frontend/
 |----------|----------|-------------|
 | `OPENAI_API_KEY` | Yes | OpenAI API key for GPT-4o Vision |
 | `FRONTEND_URL` | Yes | Production frontend URL for CORS |
-| `HIVE_API_KEY` | No | Hive API key for MarComms integration |
-| `HIVE_USER_ID` | No | Hive user ID |
-| `HIVE_WORKSPACE_ID` | No | Hive workspace ID |
-| `HIVE_DEFAULT_PROJECT_ID` | No | Default Hive project for submissions |
 
 **Frontend Service:**
 | Variable | Required | Description |
