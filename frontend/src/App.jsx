@@ -17,7 +17,6 @@ function App() {
   const [selectedTemplate, setSelectedTemplate] = useState('template1')
   const [selectedFormat, setSelectedFormat] = useState('pptx')
   const [exportedFile, setExportedFile] = useState(null)
-  const [hiveSubmission, setHiveSubmission] = useState(null) // { submitting, success, actionUrl, error }
   const streamingRef = useRef(null)
 
   // Streaming animation effect for metadata summary
@@ -71,6 +70,10 @@ function App() {
         if (options.metadata.description) formData.append('description', options.metadata.description)
         if (options.metadata.authorName) formData.append('author_name', options.metadata.authorName)
         if (options.metadata.publicationLink) formData.append('publication_link', options.metadata.publicationLink)
+        // Event-specific fields
+        if (options.metadata.eventDate) formData.append('event_date', options.metadata.eventDate)
+        if (options.metadata.eventTime) formData.append('event_time', options.metadata.eventTime)
+        if (options.metadata.eventLocation) formData.append('event_location', options.metadata.eventLocation)
         if (options.metadata.image) {
           formData.append('image', options.metadata.image)
         }
@@ -159,7 +162,11 @@ function App() {
         publication_link: uploadOptions.metadata.publicationLink || uploadOptions.metadata.publication_link || null,
         image_description: uploadOptions.metadata.image_description || null,
         template_id: selectedTemplate,
-        session_id: uploadOptions.metadata.session_id || null
+        session_id: uploadOptions.metadata.session_id || null,
+        // Event-specific fields
+        event_date: uploadOptions.metadata.eventDate || uploadOptions.metadata.event_date || null,
+        event_time: uploadOptions.metadata.eventTime || uploadOptions.metadata.event_time || null,
+        event_location: uploadOptions.metadata.eventLocation || uploadOptions.metadata.event_location || null
       }
 
       // Export to selected format
@@ -239,58 +246,10 @@ function App() {
     setSelectedTemplate('template1')
     setSelectedFormat('pptx')
     setExportedFile(null)
-    setHiveSubmission(null)
   }
 
-  const handleSubmitToHive = async () => {
-    try {
-      setHiveSubmission({ submitting: true, success: false, actionUrl: null, error: null })
-
-      const requestBody = {
-        headline: uploadOptions.metadata.headline,
-        description: uploadOptions.metadata.description,
-        caption: uploadOptions.metadata.caption || null,
-        author_name: uploadOptions.metadata.authorName || uploadOptions.metadata.author_name || null,
-        publication_link: uploadOptions.metadata.publicationLink || uploadOptions.metadata.publication_link || null,
-        image_description: uploadOptions.metadata.image_description || null,
-        template_id: selectedTemplate,
-        session_id: uploadOptions.metadata.session_id || null,
-        export_format: 'png' // PNG is best for Hive preview
-      }
-
-      const response = await axios.post(
-        `${API_BASE_URL}/submit-to-hive`,
-        requestBody,
-        {
-          headers: { 'Content-Type': 'application/json' },
-          timeout: 120000,
-        }
-      )
-
-      if (response.data.success) {
-        setHiveSubmission({
-          submitting: false,
-          success: true,
-          actionUrl: response.data.action_url,
-          error: null
-        })
-      } else {
-        setHiveSubmission({
-          submitting: false,
-          success: false,
-          actionUrl: null,
-          error: response.data.error || 'Failed to submit to Hive'
-        })
-      }
-    } catch (error) {
-      console.error('Hive submission error:', error)
-      setHiveSubmission({
-        submitting: false,
-        success: false,
-        actionUrl: null,
-        error: error.response?.data?.error || error.message || 'Failed to submit to Hive'
-      })
-    }
+  const handleSubmitToHive = () => {
+    window.open('https://forms.hive.com/?formId=MdHmoupShneudNSce', '_blank')
   }
 
   const formatOptions = [
@@ -727,60 +686,24 @@ function App() {
                   Create a service request in Hive with your slide attached for MarComms review.
                 </p>
 
-                {/* Hive submission status */}
-                {hiveSubmission?.submitting && (
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    <span className="text-sm">Submitting to Hive...</span>
-                  </div>
-                )}
-
-                {hiveSubmission?.success && (
-                  <div className="p-3 bg-green-100 border border-green-300 text-green-800 text-sm">
-                    <p className="font-medium">Successfully submitted to Hive!</p>
-                    {hiveSubmission.actionUrl && (
-                      <a
-                        href={hiveSubmission.actionUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="underline mt-1 inline-block"
-                      >
-                        View in Hive
-                      </a>
-                    )}
-                  </div>
-                )}
-
-                {hiveSubmission?.error && (
-                  <div className="p-3 bg-red-100 border border-red-300 text-red-800 text-sm">
-                    <p className="font-medium">Failed to submit:</p>
-                    <p>{hiveSubmission.error}</p>
-                  </div>
-                )}
-
-                {!hiveSubmission?.submitting && !hiveSubmission?.success && (
-                  <button
-                    onClick={handleSubmitToHive}
-                    className="mx-auto bg-white text-gray-700 font-medium py-3 px-6 transition-colors duration-200 border-2 flex items-center gap-2"
-                    style={{borderColor: '#ccc'}}
+                <button
+                  onClick={handleSubmitToHive}
+                  className="mx-auto bg-white text-gray-700 font-medium py-3 px-6 transition-colors duration-200 border-2 flex items-center gap-2"
+                  style={{borderColor: '#ccc'}}
+                >
+                  <span>Submit to Hive</span>
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="#009bdb"
+                    viewBox="0 0 24 24"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   >
-                    <span>Submit to Hive</span>
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="#009bdb"
-                      viewBox="0 0 24 24"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                    </svg>
-                  </button>
-                )}
+                    <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                </button>
               </div>
             </div>
           )}

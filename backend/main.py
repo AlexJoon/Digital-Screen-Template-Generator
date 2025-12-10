@@ -9,7 +9,6 @@ from enum import Enum
 from config import settings
 from services.openai_service import openai_service
 from services.exporters import ExportService, ExportFormat, SlideData
-from services.hive import hive_service
 from services.image_utils import crop_image_to_face
 import base64
 
@@ -165,13 +164,16 @@ _metadata_store: dict = {}
 
 @app.post("/process-metadata", response_model=ProcessMetadataResponse)
 async def process_metadata(
-    image: UploadFile = File(...),
+    image: UploadFile = File(None),
     slide_category: Optional[str] = Form(None),
     headline: Optional[str] = Form(None),
     caption: Optional[str] = Form(None),
     description: Optional[str] = Form(None),
     author_name: Optional[str] = Form(None),
-    publication_link: Optional[str] = Form(None)
+    publication_link: Optional[str] = Form(None),
+    event_date: Optional[str] = Form(None),
+    event_time: Optional[str] = Form(None),
+    event_location: Optional[str] = Form(None)
 ):
     """
     Process metadata fields and analyze the uploaded image.
@@ -198,7 +200,10 @@ async def process_metadata(
             description=description,
             author_name=author_name,
             publication_link=publication_link,
-            image_description=image_description
+            image_description=image_description,
+            event_date=event_date,
+            event_time=event_time,
+            event_location=event_location
         )
 
         # Store image data for later export (keyed by some identifier)
@@ -221,7 +226,10 @@ async def process_metadata(
                 "author_name": author_name,
                 "publication_link": publication_link,
                 "image_description": image_description,
-                "session_id": session_id
+                "session_id": session_id,
+                "event_date": event_date,
+                "event_time": event_time,
+                "event_location": event_location
             }
         )
 
@@ -241,6 +249,10 @@ class ExportRequest(BaseModel):
     image_description: Optional[str] = None
     template_id: str = "template1"
     session_id: Optional[str] = None
+    # Event-specific fields
+    event_date: Optional[str] = None
+    event_time: Optional[str] = None
+    event_location: Optional[str] = None
 
 
 @app.post("/export")
@@ -267,7 +279,10 @@ async def export_slide(
             publication_link=request.publication_link,
             image_data=image_data,
             image_description=request.image_description,
-            template_id=request.template_id
+            template_id=request.template_id,
+            event_date=request.event_date,
+            event_time=request.event_time,
+            event_location=request.event_location
         )
 
         # Get the export format enum
@@ -355,104 +370,6 @@ async def export_slide_with_image(
         raise HTTPException(
             status_code=500,
             detail=f"Error exporting slide: {str(e)}"
-        )
-
-
-# ============================================================
-# Hive Integration Endpoints
-# ============================================================
-
-class HiveSubmitRequest(BaseModel):
-    """Request body for Hive submission"""
-    headline: str
-    description: str
-    caption: Optional[str] = None
-    author_name: Optional[str] = None
-    publication_link: Optional[str] = None
-    image_description: Optional[str] = None
-    template_id: str = "template1"
-    session_id: Optional[str] = None
-    export_format: ExportFormatEnum = ExportFormatEnum.png
-
-
-class HiveSubmitResponse(BaseModel):
-    """Response from Hive submission"""
-    success: bool
-    action_id: Optional[str] = None
-    action_url: Optional[str] = None
-    error: Optional[str] = None
-
-
-@app.post("/submit-to-hive", response_model=HiveSubmitResponse)
-async def submit_to_hive(request: HiveSubmitRequest):
-    """
-    Submit a digital screen slide request to Hive.
-
-    This endpoint:
-    1. Exports the slide to the specified format (PNG by default)
-    2. Creates a Hive action in Marcomms Service Requests
-    3. Attaches the exported slide file to the action
-
-    Returns the Hive action URL for tracking.
-    """
-    try:
-        # Get image data from store if available
-        image_data = None
-        if request.session_id and request.session_id in _metadata_store:
-            image_data = _metadata_store[request.session_id].get("image_data")
-
-        # Create slide data
-        slide_data = SlideData(
-            headline=request.headline,
-            description=request.description,
-            caption=request.caption,
-            author_name=request.author_name,
-            publication_link=request.publication_link,
-            image_data=image_data,
-            image_description=request.image_description,
-            template_id=request.template_id
-        )
-
-        # Get the export format
-        export_format = ExportFormat(request.export_format.value)
-
-        # Submit to Hive
-        result = await hive_service.submit_slide_request(
-            slide_data=slide_data,
-            export_format=export_format
-        )
-
-        return HiveSubmitResponse(
-            success=result.success,
-            action_id=result.action_id,
-            action_url=result.action_url,
-            error=result.error
-        )
-
-    except Exception as e:
-        return HiveSubmitResponse(
-            success=False,
-            error=str(e)
-        )
-
-
-@app.get("/hive/projects")
-async def get_hive_projects():
-    """
-    Get available Hive projects for submission.
-    Useful for letting users choose a different project.
-    """
-    try:
-        projects = await hive_service.get_available_projects()
-        return {
-            "status": "success",
-            "projects": projects,
-            "default_project_id": settings.hive_default_project_id
-        }
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error fetching Hive projects: {str(e)}"
         )
 
 
