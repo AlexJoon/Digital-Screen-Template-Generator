@@ -136,7 +136,7 @@ Return ONLY the JSON object, no other text."""
         event_location: Optional[str] = None
     ) -> str:
         """
-        Format metadata into a human-readable summary.
+        Format metadata into a human-readable summary based on category.
 
         Returns:
             Formatted summary string
@@ -144,6 +144,7 @@ Return ONLY the JSON object, no other text."""
         parts = []
 
         # Format slide category nicely
+        category_display = ""
         if slide_category:
             category_display = slide_category.replace('_', ' ').title()
             parts.append(f"The slide category you chose: {category_display}")
@@ -174,14 +175,36 @@ Return ONLY the JSON object, no other text."""
             elif event_location:
                 parts.append(f"\n\nThis event will take place at {event_location}.")
 
+        # Category-specific author/name field labels
         if author_name:
-            parts.append(f"\n\nThe author/researcher to spotlight will be: {author_name}")
+            if slide_category == 'media_mention':
+                parts.append(f"\n\nThe featured faculty member is: {author_name}")
+            elif slide_category == 'congratulations':
+                parts.append(f"\n\nThe honoree being recognized is: {author_name}")
+            elif slide_category == 'podcast':
+                parts.append(f"\n\nThe host/guest featured is: {author_name}")
+            elif slide_category == 'research_spotlight':
+                parts.append(f"\n\nThe author/researcher to spotlight will be: {author_name}")
+            elif slide_category == 'student_screens':
+                parts.append(f"\n\nThe student featured is: {author_name}")
+            else:
+                parts.append(f"\n\nThe person featured is: {author_name}")
 
         if image_description:
             parts.append(f"\n\nYou have selected an image that shows: {image_description}")
 
+        # Category-specific link labels
         if publication_link:
-            parts.append(f"\n\nThe provided publication link ({publication_link}) will be converted into a QR code within the slide below.")
+            if slide_category == 'media_mention':
+                parts.append(f"\n\nThe article link ({publication_link}) will be converted into a QR code within the slide.")
+            elif slide_category == 'podcast':
+                parts.append(f"\n\nThe podcast link ({publication_link}) will be converted into a QR code within the slide.")
+            elif slide_category == 'events':
+                parts.append(f"\n\nThe event link ({publication_link}) will be converted into a QR code within the slide.")
+            elif slide_category == 'announcement':
+                parts.append(f"\n\nThe info link ({publication_link}) will be converted into a QR code within the slide.")
+            else:
+                parts.append(f"\n\nThe provided publication link ({publication_link}) will be converted into a QR code within the slide.")
 
         if not parts:
             return "No metadata provided."

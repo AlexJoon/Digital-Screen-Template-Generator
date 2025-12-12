@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import FormInput from './FormInput'
 import FileUploadInput from './FileUploadInput'
 
-function UploadForm({ onSubmit, apiBaseUrl = 'http://localhost:8000' }) {
-  // Metadata fields
-  const [metadata, setMetadata] = useState({
+function UploadForm({ onSubmit, apiBaseUrl = 'http://localhost:8000', initialData = null }) {
+  // Default metadata state
+  const getDefaultMetadata = () => ({
     headline: '',
     caption: '',
     description: '',
@@ -16,6 +16,43 @@ function UploadForm({ onSubmit, apiBaseUrl = 'http://localhost:8000' }) {
     eventTime: '',
     eventLocation: ''
   })
+
+  // Initialize metadata from initialData if provided (for going back to edit)
+  const [metadata, setMetadata] = useState(() => {
+    if (initialData) {
+      return {
+        headline: initialData.headline || '',
+        caption: initialData.caption || '',
+        description: initialData.description || '',
+        authorName: initialData.authorName || initialData.author_name || '',
+        image: initialData.image || null,
+        publicationLink: initialData.publicationLink || initialData.publication_link || '',
+        slideCategory: initialData.slideCategory || initialData.slide_category || 'research_spotlight',
+        eventDate: initialData.eventDate || initialData.event_date || '',
+        eventTime: initialData.eventTime || initialData.event_time || '',
+        eventLocation: initialData.eventLocation || initialData.event_location || ''
+      }
+    }
+    return getDefaultMetadata()
+  })
+
+  // Update metadata when initialData changes (when user navigates back)
+  useEffect(() => {
+    if (initialData) {
+      setMetadata({
+        headline: initialData.headline || '',
+        caption: initialData.caption || '',
+        description: initialData.description || '',
+        authorName: initialData.authorName || initialData.author_name || '',
+        image: initialData.image || null,
+        publicationLink: initialData.publicationLink || initialData.publication_link || '',
+        slideCategory: initialData.slideCategory || initialData.slide_category || 'research_spotlight',
+        eventDate: initialData.eventDate || initialData.event_date || '',
+        eventTime: initialData.eventTime || initialData.event_time || '',
+        eventLocation: initialData.eventLocation || initialData.event_location || ''
+      })
+    }
+  }, [initialData])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -79,6 +116,10 @@ function UploadForm({ onSubmit, apiBaseUrl = 'http://localhost:8000' }) {
               <option value="research_spotlight">Research Spotlight</option>
               <option value="student_screens">Student Screens</option>
               <option value="events">Events</option>
+              <option value="media_mention">Media Mention</option>
+              <option value="congratulations">Congratulations</option>
+              <option value="podcast">Podcast</option>
+              <option value="announcement">Announcement</option>
             </select>
             {/* Plus/Minus icon */}
             <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none">
@@ -296,17 +337,290 @@ function UploadForm({ onSubmit, apiBaseUrl = 'http://localhost:8000' }) {
             </div>
           </>
         )}
+
+        {metadata.slideCategory === 'media_mention' && (
+          <>
+            {/* Headline and Caption - 50/50 Grid */}
+            <div className="grid grid-cols-2 gap-4">
+              <FormInput
+                label="Headline"
+                value={metadata.headline}
+                onChange={(value) => updateMetadata('headline', value)}
+                placeholder="CBS Faculty Featured in Wall Street Journal"
+                required={true}
+                maxLength={80}
+                helpText="Title highlighting the media coverage"
+              />
+
+              <FormInput
+                label="Caption"
+                value={metadata.caption}
+                onChange={(value) => updateMetadata('caption', value)}
+                placeholder="As Seen In"
+                maxLength={60}
+                helpText="Media outlet or contextual note (optional)"
+              />
+            </div>
+
+            {/* Description - Full Width */}
+            <FormInput
+              label="Description"
+              value={metadata.description}
+              onChange={(value) => updateMetadata('description', value)}
+              placeholder="Professor John Smith discusses market trends and economic forecasts in this exclusive interview..."
+              required={true}
+              maxLength={300}
+              rows={1}
+              type="textarea"
+              helpText="Summary of the media coverage"
+            />
+
+            {/* Author Name and Publication Link - 50/50 Grid */}
+            <div className="grid grid-cols-2 gap-4">
+              <FormInput
+                label="Faculty Name"
+                value={metadata.authorName}
+                onChange={(value) => updateMetadata('authorName', value)}
+                placeholder="Professor Jane Doe"
+                maxLength={60}
+                helpText="Featured faculty member (optional)"
+              />
+
+              <FormInput
+                label="Article Link"
+                value={metadata.publicationLink}
+                onChange={(value) => updateMetadata('publicationLink', value)}
+                placeholder="https://wsj.com/article"
+                type="url"
+                helpText="Link to the full article (for QR code)"
+              />
+            </div>
+
+            {/* Image - Full Width */}
+            <FileUploadInput
+              label="Image"
+              value={metadata.image}
+              onChange={(value) => updateMetadata('image', value)}
+              required={true}
+              accept="image/*"
+              helpText="Faculty photo or article preview image (AI will auto-center)"
+              enableAICrop={true}
+              apiBaseUrl={apiBaseUrl}
+            />
+          </>
+        )}
+
+        {metadata.slideCategory === 'congratulations' && (
+          <>
+            {/* Headline and Caption - 50/50 Grid */}
+            <div className="grid grid-cols-2 gap-4">
+              <FormInput
+                label="Headline"
+                value={metadata.headline}
+                onChange={(value) => updateMetadata('headline', value)}
+                placeholder="Congratulations Dr. Smith on Receiving the Nobel Prize"
+                required={true}
+                maxLength={80}
+                helpText="Recognition headline"
+              />
+
+              <FormInput
+                label="Caption"
+                value={metadata.caption}
+                onChange={(value) => updateMetadata('caption', value)}
+                placeholder="Faculty Achievement"
+                maxLength={60}
+                helpText="Category or type of recognition (optional)"
+              />
+            </div>
+
+            {/* Description - Full Width */}
+            <FormInput
+              label="Description"
+              value={metadata.description}
+              onChange={(value) => updateMetadata('description', value)}
+              placeholder="We celebrate Professor Smith's groundbreaking contributions to the field of economics..."
+              required={true}
+              maxLength={300}
+              rows={1}
+              type="textarea"
+              helpText="Details about the accomplishment or honor"
+            />
+
+            {/* Honoree Name - Full Width */}
+            <FormInput
+              label="Honoree Name"
+              value={metadata.authorName}
+              onChange={(value) => updateMetadata('authorName', value)}
+              placeholder="Dr. Jane Smith"
+              maxLength={60}
+              helpText="Faculty or PhD student being recognized (optional)"
+            />
+
+            {/* Image - Full Width */}
+            <FileUploadInput
+              label="Image"
+              value={metadata.image}
+              onChange={(value) => updateMetadata('image', value)}
+              required={true}
+              accept="image/*"
+              helpText="Photo of the honoree (AI will auto-center on face)"
+              enableAICrop={true}
+              apiBaseUrl={apiBaseUrl}
+            />
+          </>
+        )}
+
+        {metadata.slideCategory === 'podcast' && (
+          <>
+            {/* Headline and Caption - 50/50 Grid */}
+            <div className="grid grid-cols-2 gap-4">
+              <FormInput
+                label="Headline"
+                value={metadata.headline}
+                onChange={(value) => updateMetadata('headline', value)}
+                placeholder="New Episode: The Future of Business Education"
+                required={true}
+                maxLength={80}
+                helpText="Podcast episode or series title"
+              />
+
+              <FormInput
+                label="Caption"
+                value={metadata.caption}
+                onChange={(value) => updateMetadata('caption', value)}
+                placeholder="CBS Podcast Series"
+                maxLength={60}
+                helpText="Podcast name or series (optional)"
+              />
+            </div>
+
+            {/* Description - Full Width */}
+            <FormInput
+              label="Description"
+              value={metadata.description}
+              onChange={(value) => updateMetadata('description', value)}
+              placeholder="In this episode, we explore the evolving landscape of business education with leading experts..."
+              required={true}
+              maxLength={300}
+              rows={1}
+              type="textarea"
+              helpText="Episode summary or teaser"
+            />
+
+            {/* Host Name and Podcast Link - 50/50 Grid */}
+            <div className="grid grid-cols-2 gap-4">
+              <FormInput
+                label="Host / Guest Name"
+                value={metadata.authorName}
+                onChange={(value) => updateMetadata('authorName', value)}
+                placeholder="Hosted by Professor John Doe"
+                maxLength={60}
+                helpText="Podcast host or featured guest (optional)"
+              />
+
+              <FormInput
+                label="Podcast Link"
+                value={metadata.publicationLink}
+                onChange={(value) => updateMetadata('publicationLink', value)}
+                placeholder="https://podcasts.apple.com/..."
+                type="url"
+                helpText="Link to episode or platform (for QR code)"
+              />
+            </div>
+
+            {/* Image - Full Width */}
+            <FileUploadInput
+              label="Image"
+              value={metadata.image}
+              onChange={(value) => updateMetadata('image', value)}
+              required={true}
+              accept="image/*"
+              helpText="Podcast cover art or host photo (AI will auto-center)"
+              enableAICrop={true}
+              apiBaseUrl={apiBaseUrl}
+            />
+          </>
+        )}
+
+        {metadata.slideCategory === 'announcement' && (
+          <>
+            {/* Headline and Caption - 50/50 Grid */}
+            <div className="grid grid-cols-2 gap-4">
+              <FormInput
+                label="Headline"
+                value={metadata.headline}
+                onChange={(value) => updateMetadata('headline', value)}
+                placeholder="New MBA Program Launch for Fall 2025"
+                required={true}
+                maxLength={80}
+                helpText="Announcement headline"
+              />
+
+              <FormInput
+                label="Caption"
+                value={metadata.caption}
+                onChange={(value) => updateMetadata('caption', value)}
+                placeholder="School-Wide Announcement"
+                maxLength={60}
+                helpText="Announcement type or category (optional)"
+              />
+            </div>
+
+            {/* Description - Full Width */}
+            <FormInput
+              label="Description"
+              value={metadata.description}
+              onChange={(value) => updateMetadata('description', value)}
+              placeholder="Columbia Business School is proud to announce a new innovative program designed to..."
+              required={true}
+              maxLength={300}
+              rows={1}
+              type="textarea"
+              helpText="Details about the announcement"
+            />
+
+            {/* Publication Link - Full Width */}
+            <FormInput
+              label="More Info Link"
+              value={metadata.publicationLink}
+              onChange={(value) => updateMetadata('publicationLink', value)}
+              placeholder="https://gsb.columbia.edu/announcement"
+              type="url"
+              helpText="Link for more information (optional, for QR code)"
+            />
+
+            {/* Image - Full Width */}
+            <FileUploadInput
+              label="Image"
+              value={metadata.image}
+              onChange={(value) => updateMetadata('image', value)}
+              accept="image/*"
+              helpText="Supporting visual (optional, AI will auto-center)"
+              enableAICrop={true}
+              apiBaseUrl={apiBaseUrl}
+            />
+          </>
+        )}
       </div>
 
       {/* Submit Button */}
       <div className="flex justify-center">
         {(() => {
+          // Events require date, time, location but image is optional
           const isEventsValid = metadata.slideCategory === 'events' &&
             metadata.headline && metadata.description &&
             metadata.eventDate && metadata.eventTime && metadata.eventLocation;
-          const isOtherValid = metadata.slideCategory !== 'events' &&
+
+          // Announcement - image is optional
+          const isAnnouncementValid = metadata.slideCategory === 'announcement' &&
+            metadata.headline && metadata.description;
+
+          // All other categories require headline, description, and image
+          const isStandardValid = !['events', 'announcement'].includes(metadata.slideCategory) &&
             metadata.headline && metadata.description && metadata.image;
-          const isFormValid = isEventsValid || isOtherValid;
+
+          const isFormValid = isEventsValid || isAnnouncementValid || isStandardValid;
 
           return (
             <button

@@ -14,10 +14,38 @@ function App() {
   const [displayedSummary, setDisplayedSummary] = useState('') // For streaming animation
   const [isStreaming, setIsStreaming] = useState(false)
   const [uploadOptions, setUploadOptions] = useState(null)
-  const [selectedTemplate, setSelectedTemplate] = useState('template1')
+  const [selectedTemplate, setSelectedTemplate] = useState('')
   const [selectedFormat, setSelectedFormat] = useState('pptx')
   const [exportedFile, setExportedFile] = useState(null)
+  const [categoryTemplates, setCategoryTemplates] = useState([]) // Category-specific templates
   const streamingRef = useRef(null)
+
+  // Fetch category-specific templates when entering review state
+  useEffect(() => {
+    const fetchCategoryTemplates = async () => {
+      if (status === 'review' && uploadOptions?.metadata?.slideCategory) {
+        try {
+          const response = await axios.get(
+            `${API_BASE_URL}/templates/${uploadOptions.metadata.slideCategory}`
+          )
+          setCategoryTemplates(response.data.templates)
+          // Only set the first template as default if no template is currently selected
+          // or if the currently selected template isn't in this category's templates
+          if (response.data.templates.length > 0) {
+            const templateIds = response.data.templates.map(t => t.id)
+            if (!selectedTemplate || !templateIds.includes(selectedTemplate)) {
+              setSelectedTemplate(response.data.templates[0].id)
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching templates:', error)
+          // Fallback to empty templates
+          setCategoryTemplates([])
+        }
+      }
+    }
+    fetchCategoryTemplates()
+  }, [status, uploadOptions?.metadata?.slideCategory])
 
   // Streaming animation effect for metadata summary
   useEffect(() => {
@@ -166,7 +194,9 @@ function App() {
         // Event-specific fields
         event_date: uploadOptions.metadata.eventDate || uploadOptions.metadata.event_date || null,
         event_time: uploadOptions.metadata.eventTime || uploadOptions.metadata.event_time || null,
-        event_location: uploadOptions.metadata.eventLocation || uploadOptions.metadata.event_location || null
+        event_location: uploadOptions.metadata.eventLocation || uploadOptions.metadata.event_location || null,
+        // Category field
+        slide_category: uploadOptions.metadata.slideCategory || uploadOptions.metadata.slide_category || null
       }
 
       // Export to selected format
@@ -225,6 +255,34 @@ function App() {
       link.click()
       document.body.removeChild(link)
     }
+  }
+
+  // Navigate back to edit form (Step 1) while preserving data
+  const handleGoBackToEdit = () => {
+    // Clear streaming interval
+    if (streamingRef.current) {
+      clearInterval(streamingRef.current)
+    }
+    // Keep uploadOptions so form can be pre-filled
+    setStatus('idle')
+    setMessage('')
+    setProgress(0)
+    setMetadataSummary(null)
+    setDisplayedSummary('')
+    setIsStreaming(false)
+    // Don't clear uploadOptions - we want to preserve the form data
+  }
+
+  // Navigate back to template selection (Step 2) from success screen
+  const handleGoBackToReview = () => {
+    // Clean up blob URL if exists
+    if (exportedFile?.url) {
+      window.URL.revokeObjectURL(exportedFile.url)
+    }
+    setStatus('review')
+    setMessage('Ready to generate your slide')
+    setProgress(100)
+    setExportedFile(null)
   }
 
   const handleReset = () => {
@@ -365,7 +423,11 @@ function App() {
 
           {/* Main Content */}
           {status === 'idle' && (
-            <UploadForm onSubmit={handleFormSubmit} apiBaseUrl={API_BASE_URL} />
+            <UploadForm
+              onSubmit={handleFormSubmit}
+              apiBaseUrl={API_BASE_URL}
+              initialData={uploadOptions?.metadata}
+            />
           )}
 
           {(status === 'processing' || status === 'generating') && (
@@ -382,15 +444,19 @@ function App() {
               {/* Horizontal Step Timeline */}
               <div className="p-4" style={{backgroundColor: '#f1f4f7'}}>
                 <div className="flex items-center justify-between">
-                  {/* Step 1 - Completed */}
-                  <div className="flex flex-col items-center flex-1">
-                    <div className="w-8 h-8 rounded-full bg-[#009bdb] flex items-center justify-center">
+                  {/* Step 1 - Completed (Clickable to go back) */}
+                  <button
+                    onClick={handleGoBackToEdit}
+                    className="flex flex-col items-center flex-1 group cursor-pointer"
+                    title="Go back to edit information"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-[#009bdb] flex items-center justify-center group-hover:ring-2 group-hover:ring-[#009bdb] group-hover:ring-offset-2 transition-all">
                       <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
-                    <span className="text-xs font-medium text-gray-700 mt-2 text-center">Enter Info</span>
-                  </div>
+                    <span className="text-xs font-medium text-gray-700 mt-2 text-center group-hover:text-[#009bdb] transition-colors">Enter Info</span>
+                  </button>
 
                   {/* Connector Line - Completed */}
                   <div className="flex-1 h-0.5 bg-[#009bdb] -mt-5"></div>
@@ -454,15 +520,28 @@ function App() {
                     <label className="block text-sm font-medium text-gray-700">
                       Select Brand Template
                     </label>
+                    <p className="text-xs text-gray-500 mb-1">
+                      Templates for {uploadOptions?.metadata?.slideCategory?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    </p>
                     <div className="relative">
                       <select
                         value={selectedTemplate}
                         onChange={(e) => setSelectedTemplate(e.target.value)}
                         className="w-full px-0 py-2 pr-8 border-0 border-b-2 border-gray-500 hover:border-[#181a1c] focus:border-[#009bdb] focus:hover:border-[#009bdb] focus:outline-none focus:ring-0 bg-transparent text-gray-900 appearance-none cursor-pointer transition-all duration-300 ease-in-out [&>option]:bg-[#181a1c] [&>option]:text-[#009bdb] [&>option]:py-2"
                       >
-                        <option value="template1">Template 1 - Default CBS Blue</option>
-                        <option value="template2">Template 2 - Dark Theme</option>
-                        <option value="template3">Template 3 - Light Theme</option>
+                        {categoryTemplates.length > 0 ? (
+                          categoryTemplates.map((template) => (
+                            <option key={template.id} value={template.id}>
+                              {template.name}
+                            </option>
+                          ))
+                        ) : (
+                          <>
+                            <option value="template1">Template 1 - Default CBS Blue</option>
+                            <option value="template2">Template 2 - Dark Theme</option>
+                            <option value="template3">Template 3 - Light Theme</option>
+                          </>
+                        )}
                       </select>
                       {/* Plus icon */}
                       <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none">
@@ -471,6 +550,12 @@ function App() {
                         </svg>
                       </div>
                     </div>
+                    {/* Template description */}
+                    {categoryTemplates.length > 0 && selectedTemplate && (
+                      <p className="text-xs text-gray-400 mt-1">
+                        {categoryTemplates.find(t => t.id === selectedTemplate)?.description}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -478,6 +563,7 @@ function App() {
                 <SlidePreview
                   metadata={uploadOptions?.metadata}
                   template={selectedTemplate}
+                  templateStyle={categoryTemplates.find(t => t.id === selectedTemplate)}
                 />
 
                 {/* Export Format Selection */}
@@ -513,6 +599,24 @@ function App() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <button
+                  onClick={handleGoBackToEdit}
+                  className="max-w-fit bg-white text-gray-700 font-medium py-3 px-6 transition-colors duration-200 border-2 flex items-center gap-2"
+                  style={{borderColor: '#ccc'}}
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="#009bdb"
+                    viewBox="0 0 24 24"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                  </svg>
+                  <span>Go Back</span>
+                </button>
                 <button
                   onClick={() => handleExport(selectedFormat)}
                   className="max-w-fit text-white font-medium py-3 px-6 transition-colors duration-200 flex items-center gap-2"
@@ -559,40 +663,48 @@ function App() {
               {/* Horizontal Step Timeline - All Complete */}
               <div className="p-4" style={{backgroundColor: '#f1f4f7'}}>
                 <div className="flex items-center justify-between">
-                  {/* Step 1 - Completed */}
-                  <div className="flex flex-col items-center flex-1">
-                    <div className="w-8 h-8 rounded-full bg-[#009bdb] flex items-center justify-center">
+                  {/* Step 1 - Completed (Clickable to go back) */}
+                  <button
+                    onClick={handleGoBackToEdit}
+                    className="flex flex-col items-center flex-1 group cursor-pointer"
+                    title="Go back to edit information"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-[#009bdb] flex items-center justify-center group-hover:ring-2 group-hover:ring-[#009bdb] group-hover:ring-offset-2 transition-all">
                       <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
-                    <span className="text-xs font-medium text-gray-700 mt-2 text-center">Enter Info</span>
-                  </div>
+                    <span className="text-xs font-medium text-gray-700 mt-2 text-center group-hover:text-[#009bdb] transition-colors">Enter Info</span>
+                  </button>
 
                   {/* Connector Line - Completed */}
                   <div className="flex-1 h-0.5 bg-[#009bdb] -mt-5"></div>
 
-                  {/* Step 2 - Completed */}
-                  <div className="flex flex-col items-center flex-1">
-                    <div className="w-8 h-8 rounded-full bg-[#009bdb] flex items-center justify-center">
+                  {/* Step 2 - Completed (Clickable to go back) */}
+                  <button
+                    onClick={handleGoBackToReview}
+                    className="flex flex-col items-center flex-1 group cursor-pointer"
+                    title="Go back to select template"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-[#009bdb] flex items-center justify-center group-hover:ring-2 group-hover:ring-[#009bdb] group-hover:ring-offset-2 transition-all">
                       <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
-                    <span className="text-xs font-medium text-gray-700 mt-2 text-center">Select Template</span>
-                  </div>
+                    <span className="text-xs font-medium text-gray-700 mt-2 text-center group-hover:text-[#009bdb] transition-colors">Select Template</span>
+                  </button>
 
                   {/* Connector Line - Completed */}
                   <div className="flex-1 h-0.5 bg-[#009bdb] -mt-5"></div>
 
-                  {/* Step 3 - Completed */}
+                  {/* Step 3 - Completed (Current) */}
                   <div className="flex flex-col items-center flex-1">
-                    <div className="w-8 h-8 rounded-full bg-[#009bdb] flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-full bg-[#181a1c] flex items-center justify-center ring-2 ring-[#009bdb] ring-offset-2">
                       <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
-                    <span className="text-xs font-medium text-gray-700 mt-2 text-center">Export</span>
+                    <span className="text-xs font-medium text-gray-900 mt-2 text-center">Export</span>
                   </div>
                 </div>
               </div>
