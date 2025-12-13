@@ -400,24 +400,6 @@ function App() {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-1">
-                <span className="text-sm text-gray-700 font-medium">Can Doug Send the Screen to Hive?</span>
-                <div className="relative group">
-                  <svg
-                    className="w-4 h-4 text-gray-400 cursor-help"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle cx="12" cy="12" r="10" strokeWidth="2" />
-                    <path strokeLinecap="round" strokeWidth="2" d="M12 16v-4M12 8h.01" />
-                  </svg>
-                  <div className="absolute left-0 top-full mt-2 hidden group-hover:block w-80 p-3 bg-gray-900 text-white text-xs z-10">
-                    Yes, once the generated AI slide is created, there is an option to send the slide as a digital screen request directly to Hive.
-                    <div className="absolute bottom-full left-4 -mb-1 border-4 border-transparent border-b-gray-900"></div>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -787,33 +769,58 @@ function App() {
               </div>
 
               {/* Hive Submission Section */}
-              <div className="p-4 bg-blue-50 text-center">
-                <h4 className="text-lg font-semibold text-gray-900 mb-2 flex items-center justify-center gap-2">
-                  <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
+              <div className="p-6 bg-blue-50 text-center">
+                <h4 className="text-lg font-semibold text-gray-900 mb-5">
                   Submit to MarComms
                 </h4>
-                <p className="text-base text-gray-600 mb-3">
-                  Create a service request in Hive with your slide attached for MarComms review.
-                </p>
+
+                {/* Horizontal Stepper */}
+                <div className="flex items-center justify-center mb-6 max-w-xl mx-auto">
+                  {/* Step 1 */}
+                  <div className="flex flex-col items-center flex-1">
+                    <div className="w-9 h-9 rounded-full bg-[#009bdb] text-white flex items-center justify-center text-base font-semibold mb-2">1</div>
+                    <span className="text-sm text-gray-700 text-center leading-tight">Open<br/>Form</span>
+                  </div>
+                  {/* Connector */}
+                  <div className="flex-shrink-0 w-8 h-0.5 bg-gray-300 mb-8"></div>
+                  {/* Step 2 */}
+                  <div className="flex flex-col items-center flex-1">
+                    <div className="w-9 h-9 rounded-full bg-[#009bdb] text-white flex items-center justify-center text-base font-semibold mb-2">2</div>
+                    <span className="text-sm text-gray-700 text-center leading-tight">Select<br/>Digital Screens</span>
+                  </div>
+                  {/* Connector */}
+                  <div className="flex-shrink-0 w-8 h-0.5 bg-gray-300 mb-8"></div>
+                  {/* Step 3 */}
+                  <div className="flex flex-col items-center flex-1">
+                    <div className="w-9 h-9 rounded-full bg-[#009bdb] text-white flex items-center justify-center text-base font-semibold mb-2">3</div>
+                    <span className="text-sm text-gray-700 text-center leading-tight">Upload<br/>Doug Slide</span>
+                  </div>
+                  {/* Connector */}
+                  <div className="flex-shrink-0 w-8 h-0.5 bg-gray-300 mb-8"></div>
+                  {/* Step 4 */}
+                  <div className="flex flex-col items-center flex-1">
+                    <div className="w-9 h-9 rounded-full bg-[#009bdb] text-white flex items-center justify-center text-base font-semibold mb-2">4</div>
+                    <span className="text-sm text-gray-700 text-center leading-tight">Set<br/>Dates</span>
+                  </div>
+                </div>
 
                 <button
                   onClick={handleSubmitToHive}
-                  className="mx-auto bg-white text-gray-700 font-medium py-3 px-6 transition-colors duration-200 border-2 flex items-center gap-2"
-                  style={{borderColor: '#ccc'}}
+                  className="mx-auto bg-[#009bdb] hover:bg-[#007bb0] text-white font-medium py-3 px-6 transition-colors duration-200 flex items-center gap-2"
                 >
-                  <span>Submit to Hive</span>
+                  <span>Open Service Request Form</span>
                   <svg
-                    className="w-5 h-5"
+                    className="w-4 h-4"
                     fill="none"
-                    stroke="#009bdb"
+                    stroke="currentColor"
                     viewBox="0 0 24 24"
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   >
-                    <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                    <polyline points="15 3 21 3 21 9" />
+                    <line x1="10" y1="14" x2="21" y2="3" />
                   </svg>
                 </button>
               </div>
