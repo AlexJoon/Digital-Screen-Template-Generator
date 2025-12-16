@@ -32,7 +32,6 @@ function FormInput({
 
   const isTextarea = type === 'textarea' || rows > 1
   const InputComponent = isTextarea ? 'textarea' : 'input'
-  const hasValue = value && value.length > 0
 
   return (
     <div className="space-y-1">
@@ -63,11 +62,9 @@ function FormInput({
           } text-gray-900 placeholder-gray-400 transition-all duration-300 ease-in-out`}
         />
 
-        {/* Dot indicator - grey when inactive, cyan when active */}
+        {/* Dot indicator */}
         <div className="absolute right-0 top-1/2 -translate-y-1/2">
-          <div className={`w-2 h-2 rounded-full transition-colors duration-300 ${
-            hasValue || isFocused ? 'bg-[#009bdb]' : 'bg-gray-500'
-          }`}></div>
+          <div className="w-2 h-2 rounded-full bg-[#009bdb]"></div>
         </div>
       </div>
 
