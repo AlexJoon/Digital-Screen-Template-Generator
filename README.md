@@ -5,7 +5,7 @@ A streamlined tool for Columbia Business School staff to create professional dig
 ## Features
 
 - **Direct Content Entry**: Enter headline, description, caption, and author information directly
-- **Three Slide Categories**: Research Spotlight, Student Screens, and Events with category-specific fields
+- **Seven Slide Categories**: Research Spotlight, Student Screens, Events, Media Mention, Congratulations, Podcast, and Announcement with category-specific fields and layouts
 - **Events Support**: Dedicated event slides with date, time, and location fields
 - **AI-Powered Face Cropping**: GPT-4o Vision detects faces and automatically centers crops for optimal headshot framing
 - **Image Upload**: Upload faculty/speaker images with smart cropping preview and original/cropped toggle
@@ -16,7 +16,8 @@ A streamlined tool for Columbia Business School staff to create professional dig
 - **Hive Redirect**: Quick link to submit slides to MarComms via Hive form
 - **AI Image Analysis**: GPT-4o Vision analyzes uploaded images for context
 - **Local Generation**: All slide rendering happens locally for instant exports
-- **CBS Brand Styling**: Consistent underline form inputs, cyan accents, and step timeline
+- **CBS Brand Styling**: Consistent styling with cyan accents, step timeline, and modular layout system
+- **Modular Architecture**: Organized screens, components, and reusable layout templates
 
 ## Tech Stack
 
@@ -58,15 +59,44 @@ digitally-optimized-upload-generator/
 │
 ├── frontend/
 │   ├── src/
-│   │   ├── components/
-│   │   │   ├── UploadForm.jsx     # Main form component
-│   │   │   ├── FormInput.jsx      # Reusable form input
-│   │   │   ├── FileUploadInput.jsx # Image upload component
-│   │   │   ├── SlidePreview.jsx   # Live slide preview
-│   │   │   └── StatusDisplay.jsx  # Status and progress
-│   │   ├── App.jsx                # Main application
-│   │   ├── main.jsx               # Entry point
+│   │   ├── screens/               # Screen-level components
+│   │   │   ├── index.js           # Barrel export
+│   │   │   ├── ReviewScreen.jsx   # Step 2: Template selection
+│   │   │   └── SuccessScreen.jsx  # Step 3: Export & submission
+│   │   │
+│   │   ├── components/            # Reusable UI components
+│   │   │   ├── UploadForm.jsx     # Step 1: Main form
+│   │   │   ├── FormInput.jsx      # Text input with styling
+│   │   │   ├── FileUploadInput.jsx # Image upload with AI crop
+│   │   │   ├── SlidePreview.jsx   # Live slide preview wrapper
+│   │   │   ├── SlideRender.jsx    # Dedicated render route
+│   │   │   ├── StatusDisplay.jsx  # Loading/progress states
+│   │   │   ├── StepTimeline.jsx   # 3-step progress indicator
+│   │   │   ├── FormatSelector.jsx # Export format selection
+│   │   │   │
+│   │   │   └── layouts/           # Slide layout templates
+│   │   │       ├── index.js
+│   │   │       ├── CircularLayout.jsx
+│   │   │       ├── SplitTextPrimaryLayout.jsx
+│   │   │       ├── SplitImagePrimaryLayout.jsx
+│   │   │       ├── FullHeroLayout.jsx
+│   │   │       ├── MediaVerticalLayout.jsx
+│   │   │       ├── MediaWideLayout.jsx
+│   │   │       ├── PodcastLayout.jsx
+│   │   │       ├── CongratsFramedLayout.jsx
+│   │   │       ├── NoImageLayout.jsx
+│   │   │       └── shared/        # Shared layout components
+│   │   │           ├── EventDetails.jsx
+│   │   │           └── QRCodeSection.jsx
+│   │   │
+│   │   ├── hooks/                 # Custom React hooks
+│   │   ├── styles/                # Shared style constants
+│   │   │   └── constants.js       # sectionStyles, containerStyles
+│   │   │
+│   │   ├── App.jsx                # Main application & router
+│   │   ├── main.jsx               # Entry point with routing
 │   │   └── index.css              # Global styles
+│   │
 │   ├── public/
 │   │   └── cbs-logo.png           # CBS Hermes logo
 │   ├── package.json               # Node dependencies
@@ -74,6 +104,7 @@ digitally-optimized-upload-generator/
 │   ├── railway.toml               # Railway configuration
 │   └── .env.example               # Environment template
 │
+├── start.sh                       # Quick start script
 ├── ARCHITECTURE.md                # Detailed architecture documentation
 ├── DEPLOYMENT.md                  # Railway deployment guide
 └── README.md                      # This file
@@ -157,6 +188,10 @@ For convenience, run both servers at once:
    - **Research Spotlight**: For faculty research highlights (requires image)
    - **Student Screens**: For student-related content (requires image)
    - **Events**: For event announcements with date, time, and location
+   - **Media Mention**: For press and media coverage
+   - **Congratulations**: For celebrating achievements
+   - **Podcast**: For podcast episode announcements
+   - **Announcement**: For general announcements
 2. **Enter Content**:
    - **Headline**: Main title for the slide
    - **Caption** (optional): Small text above the headline

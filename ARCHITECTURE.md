@@ -10,48 +10,70 @@ This document describes the architecture of the CBS Digital Screen Generator ("D
 ## System Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                   CBS Digital Screen Generator               │
-│                        "Doug" Frontend                       │
-│                                                              │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
-│  │ UploadForm   │  │    App.jsx   │  │StatusDisplay │      │
-│  │  Component   │──│  (Main App)  │──│  Component   │      │
-│  └──────────────┘  └──────┬───────┘  └──────────────┘      │
-│                           │                                  │
-│  ┌──────────────┐  ┌──────┴───────┐  ┌──────────────┐      │
-│  │ SlidePreview │  │  FormInput   │  │FileUploadInput│     │
-│  │  (QR Code)   │  │  Component   │  │  Component   │      │
-│  └──────────────┘  └──────────────┘  └──────────────┘      │
-│                                                              │
-│                    React + Vite + Tailwind                   │
-└────────────────────────────┬────────────────────────────────┘
-                             │
-                             │ HTTP/REST API (Axios)
-                             │
-┌────────────────────────────▼────────────────────────────────┐
-│                  CBS Digital Screen Generator                │
-│                    Backend (Python 3.9+)                     │
-│                                                              │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │                    main.py                            │   │
-│  │              (FastAPI Application)                    │   │
-│  │                                                       │   │
-│  │  Endpoints:                                          │   │
-│  │  - POST /process-metadata                            │   │
-│  │  - POST /analyze-and-crop-image                      │   │
-│  │  - POST /export (PNG/JPG/PPTX)                       │   │
-│  │  - GET  /health                                       │   │
-│  └───────────────────┬──────────────┬───────────────────┘   │
-│                      │              │                        │
-│         ┌────────────▼──────┐  ┌───▼──────────────┐        │
-│         │  openai_service   │  │  Export Service  │        │
-│         │                   │  │                   │        │
-│         │ - analyze_image   │  │ - PNG Exporter   │        │
-│         │ - format_metadata │  │ - JPG Exporter   │        │
-│         └───────────────────┘  │ - PPTX Exporter  │        │
-│                                └──────────────────┘        │
-└────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                   CBS Digital Screen Generator                   │
+│                        "Doug" Frontend                           │
+│                                                                  │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │                     App.jsx (Router)                       │  │
+│  │  status: idle → processing → review → generating → success │  │
+│  └─────────────────────────┬─────────────────────────────────┘  │
+│                            │                                     │
+│  ┌─────────────────────────┼─────────────────────────────────┐  │
+│  │                    screens/                                │  │
+│  │  ┌───────────────┐  ┌───────────────┐                     │  │
+│  │  │ ReviewScreen  │  │ SuccessScreen │                     │  │
+│  │  │ (Step 2)      │  │ (Step 3)      │                     │  │
+│  │  └───────────────┘  └───────────────┘                     │  │
+│  └───────────────────────────────────────────────────────────┘  │
+│                                                                  │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │                    components/                             │  │
+│  │  ┌────────────┐ ┌────────────┐ ┌────────────┐            │  │
+│  │  │UploadForm  │ │SlidePreview│ │StepTimeline│            │  │
+│  │  │(Step 1)    │ │            │ │            │            │  │
+│  │  └────────────┘ └────────────┘ └────────────┘            │  │
+│  │  ┌────────────┐ ┌────────────┐ ┌────────────┐            │  │
+│  │  │FormInput   │ │FileUpload  │ │FormatSelect│            │  │
+│  │  │            │ │Input       │ │            │            │  │
+│  │  └────────────┘ └────────────┘ └────────────┘            │  │
+│  │                                                           │  │
+│  │  layouts/  ─────────────────────────────────────────────  │  │
+│  │  │ CircularLayout │ SplitTextPrimaryLayout │ FullHero │   │  │
+│  │  │ MediaVertical  │ PodcastLayout │ CongratsFramed │ ... │  │
+│  │  │ shared/ → EventDetails, QRCodeSection              │   │  │
+│  └───────────────────────────────────────────────────────────┘  │
+│                                                                  │
+│  styles/constants.js ─ sectionStyles, containerStyles            │
+│                                                                  │
+│                      React + Vite + Tailwind                     │
+└────────────────────────────────┬────────────────────────────────┘
+                                 │
+                                 │ HTTP/REST API (Axios)
+                                 │
+┌────────────────────────────────▼────────────────────────────────┐
+│                  CBS Digital Screen Generator                    │
+│                    Backend (Python 3.9+)                         │
+│                                                                  │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │                    main.py                                │   │
+│  │              (FastAPI Application)                        │   │
+│  │                                                           │   │
+│  │  Endpoints:                                               │   │
+│  │  - POST /process-metadata                                 │   │
+│  │  - POST /analyze-and-crop-image                           │   │
+│  │  - POST /export (PNG/JPG/PPTX)                            │   │
+│  │  - GET  /health                                           │   │
+│  └───────────────────┬──────────────┬───────────────────────┘   │
+│                      │              │                            │
+│         ┌────────────▼──────┐  ┌───▼──────────────┐             │
+│         │  openai_service   │  │  Export Service  │             │
+│         │                   │  │                   │             │
+│         │ - analyze_image   │  │ - PNG Exporter   │             │
+│         │ - format_metadata │  │ - JPG Exporter   │             │
+│         └───────────────────┘  │ - PPTX Exporter  │             │
+│                                └──────────────────┘             │
+└─────────────────────────────────────────────────────────────────┘
                    │
                    │
        ┌───────────▼────────┐
@@ -156,44 +178,107 @@ Publication Link (user input)
 
 ## Component Architecture
 
-### Frontend Components
+### Frontend Components (Modularized)
+
+The frontend follows a modular architecture with clear separation of concerns:
 
 ```
-App.jsx (Main Container)
-├── State Management
-│   ├── status: 'idle' | 'processing' | 'review' | 'generating' | 'success' | 'error'
-│   ├── message: string
-│   ├── metadataSummary: string | null
-│   ├── uploadOptions: object | null
-│   ├── selectedTemplate: 'template1' | 'template2' | 'template3'
-│   ├── selectedFormat: 'pptx' | 'png' | 'jpg'
-│   └── exportedFile: { url, filename, format } | null
+src/
+├── App.jsx (Main Container & State Management)
+├── main.jsx (Entry point with routing)
 │
-├── Event Handlers
-│   ├── handleFormSubmit()
-│   ├── handleExport()
-│   ├── handleDownload()
-│   ├── handleReset()
-│   └── handleSubmitToHive()  # Opens Hive form URL
+├── screens/                    # Screen-level components
+│   ├── index.js               # Barrel export
+│   ├── ReviewScreen.jsx       # Step 2: Template selection & preview
+│   └── SuccessScreen.jsx      # Step 3: Export & Hive submission
 │
-└── Child Components
-    ├── UploadForm (when status === 'idle')
-    │   ├── FormInput components (headline, caption, description, etc.)
-    │   ├── FileUploadInput (image upload)
-    │   └── Submit button
-    │
-    ├── StatusDisplay (processing/generating states)
-    │   ├── Loading spinner
-    │   ├── Progress bar
-    │   └── Status message
-    │
-    └── Review/Success Views
-        ├── Metadata summary
-        ├── SlidePreview (with QR code)
-        ├── Template selector
-        ├── Format selector
-        ├── Download button
-        └── Hive submission section
+├── components/                 # Reusable UI components
+│   ├── UploadForm.jsx         # Step 1: Main form with category fields
+│   ├── FormInput.jsx          # Reusable text input with styling
+│   ├── FileUploadInput.jsx    # Image upload with AI crop preview
+│   ├── SlidePreview.jsx       # Live slide preview wrapper
+│   ├── SlideRender.jsx        # Dedicated render route for exports
+│   ├── StatusDisplay.jsx      # Loading/progress states
+│   ├── StepTimeline.jsx       # 3-step progress indicator
+│   ├── FormatSelector.jsx     # Export format selection
+│   │
+│   └── layouts/               # Slide layout templates
+│       ├── index.js           # Layout exports
+│       ├── CircularLayout.jsx          # Circular image layout
+│       ├── SplitTextPrimaryLayout.jsx  # Text-focused split layout
+│       ├── SplitImagePrimaryLayout.jsx # Image-focused split layout
+│       ├── FullHeroLayout.jsx          # Full-width hero image
+│       ├── MediaVerticalLayout.jsx     # Vertical media layout
+│       ├── MediaWideLayout.jsx         # Wide media layout
+│       ├── PodcastLayout.jsx           # Podcast-specific layout
+│       ├── CongratsFramedLayout.jsx    # Congratulations with frame
+│       ├── NoImageLayout.jsx           # Text-only layout
+│       │
+│       └── shared/            # Shared layout components
+│           ├── index.js
+│           ├── EventDetails.jsx    # Event date/time/location display
+│           └── QRCodeSection.jsx   # QR code with label
+│
+├── hooks/                     # Custom React hooks
+│   └── (custom hooks)
+│
+└── styles/                    # Shared style constants
+    └── constants.js           # sectionStyles, containerStyles
+```
+
+### State Management (App.jsx)
+
+```javascript
+// Application state
+status: 'idle' | 'processing' | 'review' | 'generating' | 'success' | 'error'
+message: string
+metadataSummary: string | null
+displayedSummary: string        // For streaming text effect
+isStreaming: boolean
+uploadOptions: object | null
+selectedTemplate: string
+selectedFormat: 'pptx' | 'png' | 'jpg'
+exportedFile: { url, filename, format } | null
+categoryTemplates: array       // Templates filtered by category
+
+// Event handlers
+handleFormSubmit()             # Process metadata & advance to review
+handleExport()                 # Generate slide file
+handleDownload()               # Trigger file download
+handleReset()                  # Return to initial state
+handleGoBackToEdit()           # Return to form with data preserved
+handleSubmitToHive()           # Opens Hive form URL
+```
+
+### Screen Components
+
+**ReviewScreen** (Step 2):
+- Displays metadata summary with streaming text effect
+- Template selector filtered by slide category
+- Live SlidePreview component
+- Export format selector (FormatSelector)
+- Navigation buttons (Go Back, Export, Start Over)
+
+**SuccessScreen** (Step 3):
+- Download button with file info
+- 6-step MarComms submission guide
+- "Submit to Hive" button that opens external form
+
+### Shared Styles (constants.js)
+
+```javascript
+export const sectionStyles = {
+  border: '1px solid #ccc',
+  borderRadius: '10px',
+  backgroundColor: '#fff',
+  padding: '2rem',
+}
+
+export const containerStyles = {
+  border: '1px solid #ccc',
+  borderRadius: '10px',
+  boxShadow: 'rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px',
+}
 ```
 
 ### Backend Services (Python)
@@ -537,10 +622,22 @@ For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 
 | Color | Hex | Usage |
 |-------|-----|-------|
-| CBS Cyan | `#009bdb` | Accent color, active states, icons |
-| CBS Dark | `#181a1c` | Primary buttons, dark backgrounds |
-| Gray 500 | `gray-500` | Form borders, inactive elements |
-| Blue 50 | `bg-blue-50` | Section backgrounds |
+| CBS Cyan | `#009bdb` | Accent color, active states, icons, steppers |
+| CBS Dark | `#181a1c` | Primary buttons, dark backgrounds, current step |
+| Light Blue BG | `#e3f2f8` | Main app background |
+| White | `#fff` | Section backgrounds, cards |
+| Gray Border | `#ccc` | Section borders, container borders |
+
+### Section Styling
+
+All content sections use consistent styling via `sectionStyles`:
+- **Border**: `1px solid #ccc`
+- **Border Radius**: `10px`
+- **Background**: `#fff` (white)
+- **Padding**: `2rem`
+
+Main container uses `containerStyles` with box shadow:
+- **Box Shadow**: `rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px`
 
 ### Form Styling
 
@@ -549,7 +646,15 @@ Form inputs follow a consistent underline-only design pattern:
 - **Hover**: `hover:border-[#181a1c]`
 - **Focus**: `focus:border-[#009bdb]`
 - **Transition**: `transition-all duration-300 ease-in-out`
-- **Dot Indicator**: Small cyan dot appears when field has value or is focused
+- **Dot Indicator**: Small cyan dot (`bg-[#009bdb]`) appears on the right
+
+### Dropdown Styling
+
+Dropdowns use rounded border styling:
+- **Border**: `border border-gray-300 rounded-lg`
+- **Hover**: `hover:border-gray-400`
+- **Focus**: `focus:border-[#009bdb]`
+- **Icon**: Plus icon in cyan on the right
 
 ### Export Format Buttons
 
@@ -558,12 +663,35 @@ Each format option displays:
 - Format label and description (left-aligned)
 - Selected state: `border-[#009bdb] bg-blue-50`
 
-### Step Timeline
+### Step Timeline (3-Step Progress)
 
-Three-step visual progress indicator:
+Visual progress indicator with larger circles (48px):
 1. **Enter Info** - Form input step
 2. **Select Template** - Template and format selection
 3. **Export** - Download and Hive submission
+
+- **Circle Size**: `w-12 h-12` (48px)
+- **Icon Size**: `w-6 h-6` (24px checkmarks)
+- **Label Size**: `text-sm` (14px)
+- **Current Step**: Dark background (`#181a1c`) with cyan ring
+- **Completed Step**: Cyan background with white checkmark
+- **Clickable**: Completed steps are clickable to go back
+
+### MarComms Submission Stepper (6-Step Guide)
+
+Horizontal stepper in SuccessScreen showing MarComms submission flow:
+1. Open Form
+2. Select Digital Screens
+3. Select Role
+4. Website Promotion?
+5. Set Dates
+6. **Upload Doug Slide** (bold)
+
+### Loading States
+
+AI image processing loader:
+- **Container**: `p-6 bg-white border border-gray-300 rounded-lg`
+- **Spinner**: `h-8 w-8 text-[#009bdb] animate-spin`
 
 ## Future Enhancements
 

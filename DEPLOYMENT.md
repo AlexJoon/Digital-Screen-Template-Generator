@@ -12,8 +12,8 @@ This guide covers deploying the CBS Digital Screen Generator to production using
 ## Architecture Overview
 
 The application consists of two services:
-- **Frontend**: React/Vite static site
-- **Backend**: FastAPI Python server
+- **Frontend**: React/Vite static site with modular component architecture (screens, components, layouts)
+- **Backend**: FastAPI Python server with export services and OpenAI integration
 
 Both services are deployed separately on Railway and communicate via REST API.
 
