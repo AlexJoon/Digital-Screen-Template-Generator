@@ -1,6 +1,7 @@
 import SlidePreview from '../components/SlidePreview'
 import StepTimeline from '../components/StepTimeline'
 import FormatSelector from '../components/FormatSelector'
+import { sectionStyles } from '../styles/constants'
 
 /**
  * ReviewScreen - Step 2: Template selection and preview
@@ -31,11 +32,11 @@ function ReviewScreen({
       />
 
       {/* Metadata Summary Section */}
-      <div className="p-4 bg-blue-50">
+      <div style={sectionStyles}>
         <h3 className="font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-300">
           Your Screen Information
         </h3>
-        <div className="text-sm text-gray-800 leading-relaxed">
+        <div className="text-md text-gray-800 leading-relaxed">
           <pre className="whitespace-pre-wrap font-sans">
             {displayedSummary.split(/(https?:\/\/[^\s)]+)/).map((part, index) => {
               if (part.match(/^https?:\/\//)) {
@@ -61,7 +62,7 @@ function ReviewScreen({
       </div>
 
       {/* Template and Format Selection */}
-      <div className="p-4 border-2 border-gray-200 space-y-6">
+      <div className="space-y-6" style={sectionStyles}>
         {/* Template Selection */}
         <div className="w-[65%] mx-auto">
           <div className="space-y-1">
@@ -75,7 +76,7 @@ function ReviewScreen({
               <select
                 value={selectedTemplate}
                 onChange={(e) => setSelectedTemplate(e.target.value)}
-                className="w-full px-0 py-2 pr-8 border-0 border-b-2 border-gray-500 hover:border-[#181a1c] focus:border-[#009bdb] focus:hover:border-[#009bdb] focus:outline-none focus:ring-0 bg-transparent text-gray-900 appearance-none cursor-pointer transition-all duration-300 ease-in-out [&>option]:bg-[#181a1c] [&>option]:text-[#009bdb] [&>option]:py-2"
+                className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg hover:border-gray-400 focus:border-[#009bdb] focus:outline-none focus:ring-0 bg-white text-gray-900 appearance-none cursor-pointer transition-all duration-300 ease-in-out [&>option]:bg-[#181a1c] [&>option]:text-[#009bdb] [&>option]:py-2"
               >
                 {categoryTemplates.length > 0 ? (
                   categoryTemplates.map((template) => (
@@ -91,7 +92,7 @@ function ReviewScreen({
                   </>
                 )}
               </select>
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none">
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                 <svg className="w-4 h-4 text-[#009bdb]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
