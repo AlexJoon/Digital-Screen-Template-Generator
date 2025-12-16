@@ -24,12 +24,12 @@ function StepTimeline({ currentStep, onStepClick }) {
           className="flex flex-col items-center group cursor-pointer"
           title={`Go back to ${step.label.toLowerCase()}`}
         >
-          <div className="w-8 h-8 rounded-full bg-[#009bdb] flex items-center justify-center group-hover:ring-2 group-hover:ring-[#009bdb] group-hover:ring-offset-2 transition-all">
-            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+          <div className="w-12 h-12 rounded-full bg-[#009bdb] flex items-center justify-center group-hover:ring-2 group-hover:ring-[#009bdb] group-hover:ring-offset-2 transition-all">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <span className="text-xs font-medium text-gray-700 mt-2 text-center group-hover:text-[#009bdb] transition-colors">
+          <span className="text-sm font-medium text-gray-700 mt-2 text-center group-hover:text-[#009bdb] transition-colors">
             {step.label}
           </span>
         </button>
@@ -39,7 +39,7 @@ function StepTimeline({ currentStep, onStepClick }) {
     return (
       <div className="flex flex-col items-center">
         <div
-          className={`w-8 h-8 rounded-full flex items-center justify-center ${
+          className={`w-12 h-12 rounded-full flex items-center justify-center ${
             isCurrent(step.num)
               ? 'bg-[#181a1c] ring-2 ring-[#009bdb] ring-offset-2'
               : isCompleted(step.num)
@@ -48,17 +48,17 @@ function StepTimeline({ currentStep, onStepClick }) {
           }`}
         >
           {isCompleted(step.num) ? (
-            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
           ) : (
-            <span className={`text-sm font-bold ${isCurrent(step.num) ? 'text-white' : 'text-gray-600'}`}>
+            <span className={`text-base font-bold ${isCurrent(step.num) ? 'text-white' : 'text-gray-600'}`}>
               {step.num}
             </span>
           )}
         </div>
         <span
-          className={`text-xs font-medium mt-2 text-center ${
+          className={`text-sm font-medium mt-2 text-center ${
             isCurrent(step.num) ? 'text-gray-900' : isCompleted(step.num) ? 'text-gray-700' : 'text-gray-500'
           }`}
         >
@@ -71,7 +71,7 @@ function StepTimeline({ currentStep, onStepClick }) {
   const renderConnector = (afterStepNum) => {
     const isActive = isCompleted(afterStepNum + 1) || isCurrent(afterStepNum + 1)
     return (
-      <div className={`flex-1 h-0.5 mx-4 -mt-5 ${isActive ? 'bg-[#009bdb]' : 'bg-gray-300'}`} />
+      <div className={`flex-1 h-0.5 mx-4 -mt-7 ${isActive ? 'bg-[#009bdb]' : 'bg-gray-300'}`} />
     )
   }
 
