@@ -277,7 +277,7 @@ export const sectionStyles = {
 export const containerStyles = {
   border: '1px solid #ccc',
   borderRadius: '10px',
-  boxShadow: 'rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px',
+  boxShadow: '0 0 5px #ccc',
 }
 ```
 
@@ -637,7 +637,7 @@ All content sections use consistent styling via `sectionStyles`:
 - **Padding**: `2rem`
 
 Main container uses `containerStyles` with box shadow:
-- **Box Shadow**: `rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px`
+- **Box Shadow**: `0 0 5px #ccc`
 
 ### Form Styling
 
