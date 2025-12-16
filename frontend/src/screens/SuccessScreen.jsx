@@ -1,5 +1,7 @@
+import React from 'react'
 import StatusDisplay from '../components/StatusDisplay'
 import StepTimeline from '../components/StepTimeline'
+import { sectionStyles } from '../styles/constants'
 
 /**
  * SuccessScreen - Step 3: Download and submit to Hive
@@ -31,8 +33,8 @@ function SuccessScreen({
       />
 
       {/* Export format buttons for additional formats */}
-      <div className="p-4 border-2 border-gray-200">
-        <p className="text-sm text-gray-600 mb-3">Export in other formats:</p>
+      <div style={sectionStyles}>
+        <p className="text-md text-gray-600 mb-3">Export in other formats:</p>
         <div className="flex flex-wrap gap-2">
           {formatOptions.filter(f => f.value !== exportedFile?.format).map((option) => (
             <button
@@ -80,32 +82,34 @@ function SuccessScreen({
       </div>
 
       {/* Hive Submission Section */}
-      <div className="p-6 bg-blue-50 text-center">
+      <div className="text-center" style={sectionStyles}>
         <h4 className="text-lg font-semibold text-gray-900 mb-5">
           Submit to MarComms
         </h4>
 
         {/* Horizontal Stepper */}
-        <div className="flex items-center justify-center mb-6 max-w-xl mx-auto">
+        <div className="flex items-center justify-between mb-6 w-full">
           {[
-            { num: 1, label: ['Open', 'Form'] },
-            { num: 2, label: ['Select', 'Digital Screens'] },
-            { num: 3, label: ['Upload', 'Doug Slide'] },
-            { num: 4, label: ['Set', 'Dates'] },
-          ].map((step, idx) => (
-            <div key={step.num} className="flex items-center">
-              <div className="flex flex-col items-center flex-1">
+            { num: 1, label: ['Open', 'Form'], bold: false },
+            { num: 2, label: ['Select', 'Digital Screens'], bold: false },
+            { num: 3, label: ['Select', 'Role'], bold: false },
+            { num: 4, label: ['Website', 'Promotion?'], bold: false },
+            { num: 5, label: ['Set', 'Dates'], bold: false },
+            { num: 6, label: ['Upload', 'Doug Slide'], bold: true },
+          ].map((step, idx, arr) => (
+            <React.Fragment key={step.num}>
+              <div className="flex flex-col items-center">
                 <div className="w-9 h-9 rounded-full bg-[#009bdb] text-white flex items-center justify-center text-base font-semibold mb-2">
                   {step.num}
                 </div>
-                <span className="text-sm text-gray-700 text-center leading-tight">
+                <span className={`text-sm text-gray-700 text-center leading-tight ${step.bold ? 'font-bold' : ''}`}>
                   {step.label[0]}<br />{step.label[1]}
                 </span>
               </div>
-              {idx < 3 && (
-                <div className="flex-shrink-0 w-8 h-0.5 bg-gray-300 mb-8"></div>
+              {idx < arr.length - 1 && (
+                <div className="flex-1 h-0.5 bg-gray-300 mx-2 -mt-6"></div>
               )}
-            </div>
+            </React.Fragment>
           ))}
         </div>
 
