@@ -2,7 +2,7 @@ from typing import Dict, Type
 
 from .base import BaseExporter, ExportFormat, SlideData
 from .pptx_exporter import PPTXExporter
-from .image_exporter import PNGExporter, JPGExporter
+from .browser_exporter import BrowserPNGExporter, BrowserJPGExporter
 
 
 class ExportService:
@@ -18,8 +18,8 @@ class ExportService:
     def _register_exporters(self):
         """Register all available exporters"""
         self._register(PPTXExporter())
-        self._register(PNGExporter())
-        self._register(JPGExporter())
+        self._register(BrowserPNGExporter())
+        self._register(BrowserJPGExporter())
 
     def _register(self, exporter: BaseExporter):
         """Register an exporter"""
