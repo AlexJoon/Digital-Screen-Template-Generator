@@ -2,6 +2,7 @@ import UploadForm from './components/UploadForm'
 import StatusDisplay from './components/StatusDisplay'
 import { useSlideWorkflow } from './hooks'
 import { ReviewScreen, SuccessScreen } from './screens'
+import { containerStyles } from './styles/constants'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
@@ -44,9 +45,9 @@ function App() {
   const workflow = useSlideWorkflow(API_BASE_URL)
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#e3f2f8' }}>
       <div className="w-full max-w-4xl">
-        <div className="bg-white p-8 space-y-6 border-2" style={{ borderColor: '#ccc' }}>
+        <div className="bg-white p-8 space-y-6" style={containerStyles}>
           {/* Header */}
           <AppHeader />
 
@@ -171,7 +172,6 @@ function AppFooter() {
         />
         <span className="text-sm text-gray-900 font-medium">Doug, an agentic tool by Columbia Business School</span>
       </div>
-      <p className="text-sm text-gray-700 font-bold">Powered by OpenAI and Hive</p>
       <p className="text-xs text-gray-500">
         Have suggestions or any questions? Please reach out to{' '}
         <a href="mailto:communications@gsb.columbia.edu" className="underline">
